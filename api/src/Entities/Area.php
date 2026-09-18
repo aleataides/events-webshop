@@ -97,4 +97,14 @@ class Area
     {
         $this->reservedQty -= $qty;
     }
+
+    /**
+     * Finalizes a held reservation into a sale — see
+     * docs/shared/business-rules.md#buy--checkout.
+     */
+    public function sell(int $qty): void
+    {
+        $this->reservedQty -= $qty;
+        $this->soldQty += $qty;
+    }
 }
