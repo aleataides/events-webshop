@@ -13,7 +13,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 trait RefreshDatabase
 {
     private static bool $schemaReady = false;
-    private EntityManagerInterface $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     protected function setUp(): void
     {

@@ -17,10 +17,21 @@
   [../../docs/shared/domain-model.md](../../docs/shared/domain-model.md#ids))
   and `Timestampable` (`createdAt`/`updatedAt` via `#[ORM\PrePersist]`/
   `#[ORM\PreUpdate]` lifecycle callbacks, UTC) on every entity.
-- **PHP-DI** — autowiring, no manual service registration for the common case.
-- **Redis**: event cache (cache-aside, simple TTL — events have no admin/write
-  path, so no invalidation logic needed) + rate-limit counters (per-IP sliding
-  window, global on all `/api` routes, `429` + `Retry-After` on breach).
+- **PHP-DI** — autowiring, no manual service registration for the common
+  case; `EventRepository`/`CategoryRepository` and Redis's `ClientInterface`
+  are explicit factories in `bootstrap/container.php` since they can't be
+  autowired (Doctrine repos need `EntityManager::getRepository()`, Redis
+  needs env-driven connection config).
+- **Redis**: event/category cache (cache-aside, simple TTL — no admin/write
+  path, so no invalidation logic needed) + rate-limit counters (fixed window
+  per IP, global on all `/api` routes, `429` + `Retry-After` on breach).
+- **Doctrine custom-type parameter gotcha**: `QueryBuilder::setParameter()`
+  silently drops `UuidBinaryType` conversion unless passed explicitly
+  (`setParameter('id', $uuid, UuidBinaryType::NAME)`) — applies to plain
+  scalar id comparisons too, not just associations. `IN (:ids)` needs raw
+  bytes + `ArrayParameterType::BINARY` for the same reason. Comparing an
+  association by id uses `IDENTITY(e.affiliate) = :affiliateId`, not
+  `e.affiliate = :affiliate` (binding the whole entity has the same bug).
 - **Quality tools**: PHPStan **level 6** (catches real argument-type
   mismatches and missing type hints without fighting third-party type-stub
   imprecision), PHP-CS-Fixer (PSR-12, auto-fix), PHPUnit.
@@ -46,31 +57,6 @@
   invocation. Only `Integration` tests (which `use RefreshDatabase`) pay that
   cost, once. Only `Integration` tests should touch a real DB at all — if a
   `Unit` test needs one, it isn't actually a unit test.
-
-## Folder structure (layer-first, PSR-4)
-
-```
-api/src/Controller/Event/EventListController.php
-api/src/Service/Event/EventService.php
-api/src/Repository/Event/EventRepository.php
-api/src/Entity/{Event,Area,Price,Category,Venue,Affiliate,HasUuidId,Timestampable}.php
-api/src/Resource/EventResource.php
-api/src/Seeder/{AffiliateSeeder,CategorySeeder,VenueSeeder,EventSeeder,AreaSeeder,PriceSeeder,DemoDataSeeder}.php
-api/src/Console/{SeedCommand,FixtureEventCommand}.php
-api/src/Middleware/{AffiliateMiddleware,RequestIdMiddleware,CorsMiddleware}.php
-api/src/Exception/{CartExpiredException,InsufficientStockException,...}.php
-api/src/Shared/{Logger,ErrorHandler,MoneyConvertible}.php
-api/bootstrap/{entity-manager,container,migrations}.php  (factories — build
-  services/dependency graphs, not settings — migrations.php returns a
-  Doctrine\Migrations\DependencyFactory, same shape as the other two)
-api/config/migrations.config.php  (doctrine/migrations' own settings array)
-api/migrations/  (generated migration classes)
-api/bin/console  (entrypoint: registers migrations + app.commands from the DI container)
-api/tests/{Unit,Integration}/... (mirrors src/ structure), tests/Support/RefreshDatabase.php
-api/phpunit.xml, phpstan.neon, .php-cs-fixer.php  (kept at root — each tool
-  auto-discovers its config there by default; moving them would mean passing
-  an explicit --config/-c flag on every invocation for no benefit)
-```
 
 ## Testing scope
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
-// Placeholder entrypoint — the real Slim app (routes, middleware) lands in Phase 3.
-header('Content-Type: application/json');
-echo json_encode(['status' => 'ok']);
+require __DIR__ . '/../vendor/autoload.php';
+
+$container = require __DIR__ . '/../bootstrap/container.php';
+$app = (require __DIR__ . '/../bootstrap/app.php')($container);
+$app->run();

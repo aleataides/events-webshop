@@ -57,6 +57,8 @@ jobs:
         env:
           MARIADB_ROOT_PASSWORD: root
           MARIADB_DATABASE: event_webshop_test
+          MARIADB_USER: event_webshop
+          MARIADB_PASSWORD: event_webshop
         ports: ["3306:3306"]
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"

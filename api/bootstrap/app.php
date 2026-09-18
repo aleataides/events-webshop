@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Controllers\ControllerInvocationStrategy;
+use App\Http\Middlewares\CorsMiddleware;
+use App\Http\Middlewares\RateLimitMiddleware;
+use App\Http\Middlewares\RequestIdMiddleware;
+use App\Shared\ErrorHandler;
+use Psr\Container\ContainerInterface;
+use Slim\App;
+use Slim\Factory\AppFactory;
+
+/**
+ * Builds the Slim app from the DI container: routes (routes/api.php),
+ * middleware (outermost to innermost: RequestId, Cors, RateLimit), and the
+ * custom error handler.
+ */
+return static function (ContainerInterface $container): App {
+    AppFactory::setContainer($container);
+    $app = AppFactory::create();
+    $app->getRouteCollector()->setDefaultInvocationStrategy(new ControllerInvocationStrategy());
+
+    (require __DIR__ . '/../routes/api.php')($app, $container);
+
+    $app->addRoutingMiddleware();
+
+    $app->add($container->get(RateLimitMiddleware::class));
+    $app->add($container->get(CorsMiddleware::class));
+    $app->add($container->get(RequestIdMiddleware::class));
+
+    $errorMiddleware = $app->addErrorMiddleware(false, false, false);
+    $errorMiddleware->setDefaultErrorHandler($container->get(ErrorHandler::class));
+
+    return $app;
+};

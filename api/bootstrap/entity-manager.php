@@ -16,7 +16,7 @@ return static function (): EntityManager {
     $appEnv = getenv('APP_ENV') ?: 'local';
 
     $config = ORMSetup::createAttributeMetadataConfiguration(
-        paths: [__DIR__ . '/../src/Entity'],
+        paths: [__DIR__ . '/../src/Entities'],
         isDevMode: $appEnv !== 'production',
     );
     $config->enableNativeLazyObjects(true);
