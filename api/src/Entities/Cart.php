@@ -43,6 +43,14 @@ class Cart
         $this->reservations = new ArrayCollection();
     }
 
+    /**
+     * A brand-new cart, expiring EXPIRY_MINUTES from $now.
+     */
+    public static function startNew(UuidInterface $id, Affiliate $affiliate, DateTimeImmutable $now): self
+    {
+        return new self($id, $affiliate, $now->modify('+' . self::EXPIRY_MINUTES . ' minutes'));
+    }
+
     public function getAffiliate(): Affiliate
     {
         return $this->affiliate;

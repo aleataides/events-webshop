@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entities;
 
+use App\Repositories\PriceRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 
@@ -11,7 +12,7 @@ use Ramsey\Uuid\UuidInterface;
  * Money fields are minor units (cents) — see App\Shared\MoneyConvertible for
  * decimal-string conversion at the boundaries (seeders, Resource classes).
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: PriceRepository::class)]
 #[ORM\Table(name: 'price')]
 #[ORM\HasLifecycleCallbacks]
 class Price

@@ -24,6 +24,7 @@ return static function (ContainerInterface $container): App {
     (require __DIR__ . '/../routes/api.php')($app, $container);
 
     $app->addRoutingMiddleware();
+    $app->addBodyParsingMiddleware();
 
     $app->add($container->get(RateLimitMiddleware::class));
     $app->add($container->get(CorsMiddleware::class));
