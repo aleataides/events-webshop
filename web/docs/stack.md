@@ -18,6 +18,8 @@
   - All auto-fixable, wired into the pre-commit hook + CI lint job.
 - **Map**: Leaflet + OpenStreetMap, lazy-loaded only when the map section is
   expanded.
+- **DOMPurify**: sanitizes the event description HTML before `v-html`
+  (BE-sourced, but sanitized as defense-in-depth rather than trusted blindly).
 - **Node 24 LTS**, npm.
 
 ## Folder structure (layer-first)
