@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Console\FixtureEventCommand;
 use App\Console\SeedCommand;
+use App\Entities\Event;
 use App\Factories\FactoryRegistry;
+use App\Repositories\EventRepository;
 use App\Shared\RequestContext;
 use App\Shared\RequestContextProcessor;
 use DI\Container;
@@ -38,6 +40,7 @@ $builder->addDefinitions([
 
         return $logger;
     },
+    EventRepository::class => static fn (Container $c) => $c->get(EntityManagerInterface::class)->getRepository(Event::class),
     'app.commands' => [
         SeedCommand::class,
         FixtureEventCommand::class,
