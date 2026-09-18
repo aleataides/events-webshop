@@ -16,15 +16,24 @@ no guarantee it was ever actually allocated.
 
 ## Stock locking
 
-Atomic conditional update, no long-held row locks:
+`Area.capacity` is the fixed original total. Available stock is always
+`capacity - reserved_qty - sold_qty`. Adding a reservation is an atomic
+conditional update, no long-held row locks — the check **must** include
+`sold_qty`, not just `reserved_qty`, or capacity already sold would still
+look free:
 
 ```sql
 UPDATE area SET reserved_qty = reserved_qty + :qty
-WHERE id = :area_id AND reserved_qty + :qty <= capacity
+WHERE id = :area_id AND reserved_qty + sold_qty + :qty <= capacity
 ```
 
 Standard high-load-ecommerce/ticketing pattern — resolves the race in one round
 trip, no `SELECT ... FOR UPDATE` wait queue under contention.
+
+**Releasing** a reservation (expiry, cart edit-down, explicit removal) must
+decrement `reserved_qty` by that reservation's qty in the same transaction
+that deletes/shrinks the reservation row — otherwise that stock stays
+permanently (and incorrectly) marked unavailable.
 
 ## Cart expiry
 
@@ -59,10 +68,13 @@ which keep their real venue timezone (e.g. `Europe/Berlin`) for display.
 
 ## Buy / checkout
 
-One atomic transaction converts reservation → sold: increment `Area.sold_qty`
-permanently, delete the reservation row, create `Order` + `OrderItem` rows.
-No payment gateway — mock checkout, Buy response IS the confirmation data (no
-separate `GET /orders/{id}` endpoint).
+One atomic transaction converts reservation → sold, for each reservation in
+the cart: **decrement `Area.reserved_qty`** (the hold is finalized, no longer
+just "held") **and increment `Area.sold_qty`** by the same qty (both, or the
+stock accounting double-counts that qty as unavailable), delete the
+reservation row, create `Order` + `OrderItem` rows. No payment gateway — mock
+checkout, Buy response IS the confirmation data (no separate
+`GET /orders/{id}` endpoint).
 
 ## VAT/tax
 

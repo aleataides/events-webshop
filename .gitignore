@@ -10,6 +10,7 @@ web/dist/
 
 # PHP
 api/.phpunit.cache/
+api/.php-cs-fixer.cache
 api/var/cache/
 api/var/log/
 

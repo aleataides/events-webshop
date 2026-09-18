@@ -9,8 +9,12 @@ requirements and [docs/plan.md](docs/plan.md) for the full architecture plan.
 ```sh
 cp .env.example .env
 docker compose up -d
-docker compose exec api bin/console app:seed   # auto-runs on first start too
+docker compose exec api bin/console app:seed   # demo data, first time only
 ```
+
+Migrations run automatically on container start (`docker/api/entrypoint.sh`).
+Seeding is manual — safe to re-run, but not idempotent (each run adds more
+demo rows rather than replacing existing ones).
 
 - Web: http://localhost:3000
 - API: http://localhost:8080
