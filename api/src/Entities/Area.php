@@ -87,4 +87,13 @@ class Area
             $this->prices->add($price);
         }
     }
+
+    /**
+     * Releases a held reservation (expiry, edit-down, removal) — see
+     * docs/shared/business-rules.md#stock-locking.
+     */
+    public function release(int $qty): void
+    {
+        $this->reservedQty -= $qty;
+    }
 }

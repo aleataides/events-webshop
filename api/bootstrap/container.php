@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Console\FixtureEventCommand;
 use App\Console\SeedCommand;
+use App\Entities\Cart;
 use App\Entities\Category;
 use App\Entities\Event;
 use App\Factories\FactoryRegistry;
+use App\Repositories\CartRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\EventRepository;
 use App\Shared\RequestContext;
@@ -44,6 +46,7 @@ $builder->addDefinitions([
     },
     EventRepository::class => static fn (Container $c) => $c->get(EntityManagerInterface::class)->getRepository(Event::class),
     CategoryRepository::class => static fn (Container $c) => $c->get(EntityManagerInterface::class)->getRepository(Category::class),
+    CartRepository::class => static fn (Container $c) => $c->get(EntityManagerInterface::class)->getRepository(Cart::class),
     'app.commands' => [
         SeedCommand::class,
         FixtureEventCommand::class,
