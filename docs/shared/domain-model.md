@@ -13,9 +13,12 @@ example payloads), not invented.
   `minPrice`/`maxPrice` are **derived** (MIN/MAX over the event's `Price.value`
   across all its Areas), never stored.
 - **Category**: `id`, `name`. **Event ↔ Category is many-to-many** (junction
-  table) even though the task only confirms 1 category today.
+  table) — task.md confirms events can have N categories.
 - **Area**: `id`, `event_id`, `name` (e.g. "Freie Platzwahl"), `capacity`,
-  `sold_qty`. Holds the **shared stock pool** for a block/section.
+  `reserved_qty` (held by active, unexpired cart reservations — see the atomic
+  update in [business-rules.md](./business-rules.md#stock-locking)),
+  `sold_qty` (permanent, after Buy). Holds the **shared stock pool** for a
+  block/section; available = `capacity - reserved_qty - sold_qty`.
 - **Price**: `id`, `area_id`, `name` (e.g. "Normalpreis", "Ermäßigt"), `value`,
   `currency`, `basePrice`, `ticketFee`, `outletFee`. This is what the task calls
   "ticket name/type" — the actual sellable/cart line item. Stock is NOT
@@ -39,7 +42,14 @@ example payloads), not invented.
 ## IDs
 
 UUIDv7 everywhere — time-sortable, doubles directly as the cursor-pagination
-cursor.
+cursor. Generated app-side (`ramsey/uuid`) pre-flush, not by a DB default —
+Doctrine's unit-of-work needs the identifier before insert to wire up
+relationships in the same transaction, and MariaDB has no `RETURNING` clause
+to fetch a DB-generated value back without an extra round-trip. Stored via
+`ramsey/uuid-doctrine`'s `uuid_binary` type (raw 16-byte binary, RFC order,
+not `CHAR(36)`) — **not** `uuid_binary_ordered_time`, which reorders bytes for
+v1 UUIDs and would break v7's already-correct chronological byte order that
+cursor pagination relies on (`ORDER BY id` = byte-wise = time-wise).
 
 ## Real source data (reference only, not committed as fixtures)
 

@@ -4,8 +4,21 @@
 
 `controller > service > repository`. Business rules never in controllers.
 Resource classes (Laravel-like) are the only entity→JSON boundary — controllers
-never serialize entities directly. Always return JSON. Max 2-line docblocks.
-PSR-12 + Slim best practices.
+never serialize entities directly. Always return JSON. Max **4 constructor
+parameters** — beyond that, extract a coordinating/facade object rather than
+keep adding params. That facade itself is the accepted exception to the
+limit (bundling N related collaborators is its whole job) — don't chase the
+count recursively into it. PSR-12 + Slim best practices. Use PHP 8.4 syntax
+where it simplifies code, e.g. `new Foo()->bar()` directly (no wrapping
+parens needed for a `new` expression's methods since 8.4).
+
+**Comments**: classes, methods, properties, and constants use a multi-line
+docblock (`/**\n * ...\n */`, max 2 lines of content, matching
+`api/tests/Support/RefreshDatabase.php`'s style) — never a single-line
+`/** ... */`. Comments on statements *inside* a method/function body use
+`//` instead. Add either only when something actually needs explaining — not
+by default on every method, and never restating what the signature/name
+already says.
 
 ## Base path & routing
 
