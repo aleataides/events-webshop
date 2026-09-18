@@ -44,29 +44,4 @@ final class EventFactory extends Factory
             'affiliate' => null,
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Event
-    {
-        return new Event(
-            $attributes['id'],
-            $attributes['title'],
-            $attributes['subtitle'],
-            $attributes['description'],
-            $attributes['priceInfo'],
-            $attributes['start'],
-            $attributes['end'],
-            $attributes['salesEnd'],
-            $attributes['doorsOpen'],
-            $attributes['doorsClose'],
-            $attributes['status'],
-            $attributes['eventType'],
-            $attributes['imageId'],
-            $attributes['imageCopyright'],
-            $attributes['venue'],
-            $attributes['affiliate'],
-        );
-    }
 }

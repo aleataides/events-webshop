@@ -23,12 +23,4 @@ final class AffiliateFactory extends Factory
             'logoUrl' => $this->faker->imageUrl(200, 200, 'business'),
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Affiliate
-    {
-        return new Affiliate($attributes['id'], $attributes['name'], $attributes['logoUrl']);
-    }
 }

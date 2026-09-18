@@ -6,10 +6,12 @@ namespace App\Factories;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Faker\Generator;
+use LogicException;
+use ReflectionClass;
 
 /**
- * Laravel-style model factory: `definition()` returns Faker defaults,
- * `make()` builds an unpersisted entity, `create()` also persists it.
+ * `definition()` returns Faker defaults; `make()`/`create()` build the
+ * entity via reflection (constructor params matched to attribute keys).
  *
  * @template TModel of object
  */
@@ -27,18 +29,31 @@ abstract class Factory
     abstract protected function definition(): array;
 
     /**
-     * @param array<string, mixed> $attributes
-     * @return TModel
-     */
-    abstract protected function newModel(array $attributes): object;
-
-    /**
      * @param array<string, mixed> $overrides
      * @return TModel
      */
     public function make(array $overrides = []): object
     {
-        return $this->newModel([...$this->definition(), ...$overrides]);
+        $attributes = [...$this->definition(), ...$overrides];
+        $entityClass = $this->entityClass();
+        $constructor = new ReflectionClass($entityClass)->getConstructor();
+
+        $args = [];
+        foreach ($constructor?->getParameters() ?? [] as $parameter) {
+            $name = $parameter->getName();
+            if (array_key_exists($name, $attributes)) {
+                $args[] = $attributes[$name];
+            } elseif ($parameter->isDefaultValueAvailable()) {
+                $args[] = $parameter->getDefaultValue();
+            } else {
+                throw new LogicException(sprintf('Missing "%s" attribute for %s.', $name, $entityClass));
+            }
+        }
+
+        /** @var TModel $model */
+        $model = new $entityClass(...$args);
+
+        return $model;
     }
 
     /**
@@ -61,5 +76,21 @@ abstract class Factory
     {
         // range(1, 0) returns [1, 0], not [] — array_fill avoids that quirk.
         return array_map(fn () => $this->create($overrides), array_fill(0, max(0, $count), null));
+    }
+
+    /**
+     * Convention: `App\Factories\{Name}Factory` -> `App\Entities\{Name}`.
+     *
+     * @return class-string<TModel>
+     */
+    private function entityClass(): string
+    {
+        $shortName = substr(static::class, strrpos(static::class, '\\') + 1);
+        $shortName = substr($shortName, 0, -strlen('Factory'));
+
+        /** @var class-string<TModel> $entityClass */
+        $entityClass = 'App\\Entities\\' . $shortName;
+
+        return $entityClass;
     }
 }

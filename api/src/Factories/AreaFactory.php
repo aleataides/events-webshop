@@ -28,19 +28,4 @@ final class AreaFactory extends Factory
             'soldQty' => 0,
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Area
-    {
-        return new Area(
-            $attributes['id'],
-            $attributes['event'],
-            $attributes['name'],
-            $attributes['capacity'],
-            $attributes['reservedQty'],
-            $attributes['soldQty'],
-        );
-    }
 }

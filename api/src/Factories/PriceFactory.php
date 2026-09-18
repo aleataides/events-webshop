@@ -34,20 +34,4 @@ final class PriceFactory extends Factory
             'currency' => 'EUR',
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Price
-    {
-        return new Price(
-            $attributes['id'],
-            $attributes['area'],
-            $attributes['name'],
-            $attributes['basePriceCents'],
-            $attributes['ticketFeeCents'],
-            $attributes['outletFeeCents'],
-            $attributes['currency'],
-        );
-    }
 }

@@ -22,12 +22,4 @@ final class CategoryFactory extends Factory
             'name' => $this->faker->word(),
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Category
-    {
-        return new Category($attributes['id'], $attributes['name']);
-    }
 }

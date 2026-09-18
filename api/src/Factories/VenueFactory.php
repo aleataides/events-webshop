@@ -28,21 +28,4 @@ final class VenueFactory extends Factory
             'longitude' => (string) $this->faker->longitude(6, 15),
         ];
     }
-
-    /**
-     * @param array<string, mixed> $attributes
-     */
-    protected function newModel(array $attributes): Venue
-    {
-        return new Venue(
-            $attributes['id'],
-            $attributes['name'],
-            $attributes['street'],
-            $attributes['zipCode'],
-            $attributes['city'],
-            $attributes['country'],
-            $attributes['latitude'],
-            $attributes['longitude'],
-        );
-    }
 }
