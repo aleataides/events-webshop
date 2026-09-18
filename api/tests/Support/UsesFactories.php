@@ -4,38 +4,50 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
-use App\Factories\AffiliateFactory;
-use App\Factories\AreaFactory;
-use App\Factories\CategoryFactory;
-use App\Factories\EventFactory;
-use App\Factories\PriceFactory;
-use App\Factories\VenueFactory;
+use App\Factories\Factory;
 use Doctrine\ORM\EntityManagerInterface;
 use Faker\Factory as FakerFactory;
+use LogicException;
 
 /**
- * Wires App\Factories\* for tests. Pass a stub EntityManager for Unit tests
- * that only call make(); pass RefreshDatabase's real one to persist/create().
+ * Wires App\Factories\* for tests via `$this->{name}Factory` (e.g.
+ * `$this->affiliateFactory`), resolved by convention — no per-factory
+ * property/constructor boilerplate, and new factories need no trait edit.
+ * Pass a stub EntityManager for Unit tests that only call make(); pass
+ * RefreshDatabase's real one to persist/create().
  */
 trait UsesFactories
 {
-    protected AffiliateFactory $affiliateFactory;
-    protected VenueFactory $venueFactory;
-    protected CategoryFactory $categoryFactory;
-    protected EventFactory $eventFactory;
-    protected AreaFactory $areaFactory;
-    protected PriceFactory $priceFactory;
+    private ?EntityManagerInterface $factoriesEntityManager = null;
+
+    /**
+     * @var array<string, Factory<object>>
+     */
+    private array $resolvedFactories = [];
 
     protected function setUpFactories(?EntityManagerInterface $entityManager = null): void
     {
-        $faker = FakerFactory::create();
-        $entityManager ??= $this->createStub(EntityManagerInterface::class);
+        $this->factoriesEntityManager = $entityManager ?? $this->createStub(EntityManagerInterface::class);
+    }
 
-        $this->affiliateFactory = new AffiliateFactory($faker, $entityManager);
-        $this->venueFactory = new VenueFactory($faker, $entityManager);
-        $this->categoryFactory = new CategoryFactory($faker, $entityManager);
-        $this->eventFactory = new EventFactory($faker, $entityManager);
-        $this->areaFactory = new AreaFactory($faker, $entityManager);
-        $this->priceFactory = new PriceFactory($faker, $entityManager);
+    /**
+     * @return Factory<object>
+     */
+    public function __get(string $name): Factory
+    {
+        if (isset($this->resolvedFactories[$name])) {
+            return $this->resolvedFactories[$name];
+        }
+
+        if (!str_ends_with($name, 'Factory') || !$this->factoriesEntityManager instanceof EntityManagerInterface) {
+            throw new LogicException(sprintf('Unknown property "%s" (call setUpFactories() first?).', $name));
+        }
+
+        $class = 'App\\Factories\\' . ucfirst($name);
+        if (!is_subclass_of($class, Factory::class)) {
+            throw new LogicException(sprintf('No factory class "%s" for property "%s".', $class, $name));
+        }
+
+        return $this->resolvedFactories[$name] = new $class(FakerFactory::create(), $this->factoriesEntityManager);
     }
 }

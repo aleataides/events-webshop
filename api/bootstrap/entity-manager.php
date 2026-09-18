@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Doctrine\ORM\ORMSetup;
 use Ramsey\Uuid\Doctrine\UuidBinaryType;
 
@@ -20,6 +21,8 @@ return static function (): EntityManager {
         isDevMode: $appEnv !== 'production',
     );
     $config->enableNativeLazyObjects(true);
+    // Column names default to the property name verbatim otherwise (camelCase).
+    $config->setNamingStrategy(new UnderscoreNamingStrategy(CASE_LOWER));
 
     $dbName = getenv('DB_NAME') ?: 'event_webshop';
     if ($appEnv === 'test') {
