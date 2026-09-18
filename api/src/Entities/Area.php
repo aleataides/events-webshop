@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Entities;
 
+use App\Repositories\AreaRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: AreaRepository::class)]
 #[ORM\Table(name: 'area')]
 #[ORM\HasLifecycleCallbacks]
 class Area

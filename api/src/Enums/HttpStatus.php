@@ -11,6 +11,7 @@ enum HttpStatus: int
 {
     case BadRequest = 400;
     case NotFound = 404;
+    case Conflict = 409;
     case Gone = 410;
     case TooManyRequests = 429;
     case InternalServerError = 500;

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\CartController;
+use App\Http\Controllers\Cart\CartController;
+use App\Http\Controllers\Cart\CartItemDestroyController;
+use App\Http\Controllers\Cart\CartItemStoreController;
+use App\Http\Controllers\Cart\CartItemUpdateController;
 use App\Http\Controllers\CategoryListController;
 use App\Http\Controllers\EventDetailController;
 use App\Http\Controllers\EventListController;
@@ -18,6 +21,12 @@ return static function (App $app, ContainerInterface $container): void {
         $group->get('/events', EventListController::class);
         $group->get('/events/{eventId}', EventDetailController::class);
         $group->get('/categories', CategoryListController::class);
-        $group->get('/cart', CartController::class);
+
+        $group->group('/cart', function ($cart): void {
+            $cart->get('', CartController::class);
+            $cart->post('/items', CartItemStoreController::class);
+            $cart->patch('/items/{itemId}', CartItemUpdateController::class);
+            $cart->delete('/items/{itemId}', CartItemDestroyController::class);
+        });
     })->add($container->get(AffiliateMiddleware::class));
 };
