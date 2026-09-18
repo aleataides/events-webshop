@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryListController;
 use App\Http\Controllers\EventDetailController;
 use App\Http\Controllers\EventListController;
@@ -17,5 +18,6 @@ return static function (App $app, ContainerInterface $container): void {
         $group->get('/events', EventListController::class);
         $group->get('/events/{eventId}', EventDetailController::class);
         $group->get('/categories', CategoryListController::class);
+        $group->get('/cart', CartController::class);
     })->add($container->get(AffiliateMiddleware::class));
 };
