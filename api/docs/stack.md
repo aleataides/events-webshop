@@ -11,12 +11,17 @@
   never lazy-loaded into a JSON response. Resource classes are the *only*
   thing allowed to touch/serialize entities, which is what neutralizes the
   usual lazy-load-leaking-into-JSON risk of a full ORM. Entities:
-  `Affiliate`, `Venue`, `Category`, `Event`, `Area`, `Price` (Phase 2) —
-  `Cart`, `TicketReservation`, `Order`, `OrderItem` land in Phase 4. Two
-  shared traits: `HasUuidId` (id property/getter, `uuid_binary` type — see
-  [../../docs/shared/domain-model.md](../../docs/shared/domain-model.md#ids))
-  and `Timestampable` (`createdAt`/`updatedAt` via `#[ORM\PrePersist]`/
-  `#[ORM\PreUpdate]` lifecycle callbacks, UTC) on every entity.
+  `Affiliate`, `Venue`, `Category`, `Event`, `Area`, `Price`, `Cart`,
+  `TicketReservation` — `Order`/`OrderItem` land with the buy/checkout
+  endpoint. Three shared traits: `HasUuidId` (id property/getter,
+  `uuid_binary` type — see
+  [../../docs/shared/domain-model.md](../../docs/shared/domain-model.md#ids)),
+  `HasFactory` (`Entity::factory()`, see `src/Factories/`), and
+  `Timestampable` (`createdAt`/`updatedAt` via `#[ORM\PrePersist]`/
+  `#[ORM\PreUpdate]` lifecycle callbacks, UTC) on every entity. **DB columns
+  are snake_case** — `UnderscoreNamingStrategy` in `bootstrap/entity-manager.php`,
+  not per-column `name:` attributes (Doctrine defaults to the camelCase
+  property name verbatim otherwise).
 - **PHP-DI** — autowiring, no manual service registration for the common
   case; `EventRepository`/`CategoryRepository` and Redis's `ClientInterface`
   are explicit factories in `bootstrap/container.php` since they can't be
