@@ -9,6 +9,7 @@ services:
       - /app/node_modules
     environment:
       - TZ=UTC
+      - VITE_APP_TITLE=${VITE_APP_TITLE:-Event Webshop}
       - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
       - VITE_IMAGES_API_BASE_URL=${VITE_IMAGES_API_BASE_URL:-https://bo.light-stg.de}
     depends_on:

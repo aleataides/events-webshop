@@ -12,7 +12,9 @@
   - `eslint-plugin-perfectionist` (import sorting only — its
     `sort-vue-attributes` rule left disabled, redundant with
     `vue/attributes-order`)
-  - Prettier run standalone (not via `eslint-plugin-prettier`)
+  - Prettier run standalone (not via `eslint-plugin-prettier`) —
+    `vue/max-attributes-per-line` and `vue/singleline-html-element-content-newline`
+    disabled since they fight Prettier's own line-break choices.
   - All auto-fixable, wired into the pre-commit hook + CI lint job.
 - **Map**: Leaflet + OpenStreetMap, lazy-loaded only when the map section is
   expanded.
@@ -20,19 +22,18 @@
 
 ## Folder structure (layer-first)
 
-```
-web/src/views/{EventList,EventDetail,Cart}/{Page}.vue + components/*.vue
-web/src/components/  (shared/reusable, e.g. AppHeader.vue, TicketCounter.vue)
-web/src/stores/{cart,affiliate}.ts
-web/src/composables/useX.ts
-web/src/router/index.ts
-web/src/api/{client.ts,events.ts,cart.ts}.ts
-web/src/types/{event.ts,cart.ts}.ts
-web/tests/  (mirrors src/ structure)
-```
-
-- `components/` = shared/reusable across views. `views/{Page}/components/` =
-  page-specific, not reused elsewhere.
+- `views/` — one folder per page (`EventList`, `EventDetail`, `Cart`), each
+  with its own `components/` for page-specific, non-reused pieces.
+- `components/` — shared/reusable components across views.
+- `stores/` — Pinia stores.
+- `composables/` — `useX` composables.
+- `router/` — Vue Router setup.
+- `api/` — Axios client + per-resource API modules.
+- `lib/` — small framework-agnostic helpers.
+- `plugins/` — third-party plugin setup (Vuetify).
+- `styles/` — global CSS/design tokens.
+- `types/` — shared TypeScript types.
+- `tests/` — mirrors `src/`.
 
 ## Testing scope
 
