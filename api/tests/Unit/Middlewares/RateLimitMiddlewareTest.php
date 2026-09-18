@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middlewares;
 
-use App\Middlewares\RateLimitMiddleware;
+use App\Http\Middlewares\RateLimitMiddleware;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;

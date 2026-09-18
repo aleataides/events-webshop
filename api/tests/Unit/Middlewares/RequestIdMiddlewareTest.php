@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Middlewares;
 
-use App\Middlewares\RequestIdMiddleware;
+use App\Http\Middlewares\RequestIdMiddleware;
 use App\Shared\RequestContext;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;

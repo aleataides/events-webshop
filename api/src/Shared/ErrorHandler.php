@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Shared;
 
+use App\Enums\HttpStatus;
 use App\Exceptions\DomainException;
+use App\Http\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use Slim\Psr7\Response;
 use Throwable;
 
 /**
@@ -42,15 +43,12 @@ final class ErrorHandler
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
         }
 
-        $response = new Response($status->value);
-        $response->getBody()->write(json_encode([
+        return new JsonResponse([
             'error' => [
                 'code' => $code,
                 'message' => $message,
                 'request_id' => $this->requestContext->getRequestId(),
             ],
-        ], JSON_THROW_ON_ERROR));
-
-        return $response->withHeader('Content-Type', 'application/json');
+        ], $status->value);
     }
 }

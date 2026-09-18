@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Middlewares;
+namespace App\Http\Middlewares;
 
 use App\Entities\Affiliate;
 use App\Exceptions\AffiliateNotFoundException;

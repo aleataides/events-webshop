@@ -6,16 +6,10 @@ namespace App\Seeders;
 
 use App\Entities\Area;
 use App\Entities\Event;
-use App\Factories\AreaFactory;
+use App\Entities\Price;
 
 final class AreaSeeder
 {
-    public function __construct(
-        private readonly AreaFactory $areaFactory,
-        private readonly PriceSeeder $priceSeeder,
-    ) {
-    }
-
     /**
      * @return list<Area>
      */
@@ -23,8 +17,8 @@ final class AreaSeeder
     {
         $areas = [];
         for ($i = 0; $i < $count; $i++) {
-            $area = $this->areaFactory->create(['event' => $event]);
-            $this->priceSeeder->seed($area);
+            $area = Area::factory()->create(['event' => $event]);
+            Price::factory()->create(['area' => $area]);
             $areas[] = $area;
         }
 

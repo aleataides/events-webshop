@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Middlewares;
+namespace App\Http\Middlewares;
 
-use App\Shared\HttpStatus;
+use App\Enums\HttpStatus;
+use App\Http\JsonResponse;
 use Predis\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Psr7\Response;
 
 /**
  * Fixed-window counter per IP, global on all /api routes. Simpler than a
@@ -18,8 +18,6 @@ use Slim\Psr7\Response;
  */
 final class RateLimitMiddleware implements MiddlewareInterface
 {
-    private const int WINDOW_SECONDS = 60;
-
     public function __construct(private readonly ClientInterface $redis)
     {
     }
@@ -27,23 +25,19 @@ final class RateLimitMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $max = (int) (getenv('RATE_LIMIT_MAX') ?: 60);
-        $window = intdiv(time(), self::WINDOW_SECONDS);
+        $windowSeconds = (int) (getenv('RATE_LIMIT_WINDOW_SECONDS') ?: 60);
+        $window = intdiv(time(), $windowSeconds);
         $key = sprintf('ratelimit:%s:%d', $this->resolveIp($request), $window);
 
         $count = (int) $this->redis->incr($key);
         if ($count === 1) {
-            $this->redis->expire($key, self::WINDOW_SECONDS);
+            $this->redis->expire($key, $windowSeconds);
         }
 
         if ($count > $max) {
-            $response = new Response(HttpStatus::TooManyRequests->value);
-            $response->getBody()->write(json_encode([
+            return new JsonResponse([
                 'error' => ['code' => 'rate_limited', 'message' => 'Too many requests.'],
-            ], JSON_THROW_ON_ERROR));
-
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Retry-After', (string) self::WINDOW_SECONDS);
+            ], HttpStatus::TooManyRequests->value)->withHeader('Retry-After', (string) $windowSeconds);
         }
 
         return $handler->handle($request);

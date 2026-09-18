@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Console\FixtureEventCommand;
 use App\Console\SeedCommand;
+use App\Factories\FactoryRegistry;
 use App\Shared\RequestContext;
 use App\Shared\RequestContextProcessor;
 use DI\Container;
@@ -43,4 +44,7 @@ $builder->addDefinitions([
     ],
 ]);
 
-return $builder->build();
+$container = $builder->build();
+FactoryRegistry::setContainer($container);
+
+return $container;

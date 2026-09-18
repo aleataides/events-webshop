@@ -8,13 +8,11 @@ use App\Entities\Affiliate;
 use App\Entities\Category;
 use App\Entities\Event;
 use App\Entities\Venue;
-use App\Factories\EventFactory;
 use Faker\Generator;
 
 final class EventSeeder
 {
     public function __construct(
-        private readonly EventFactory $eventFactory,
         private readonly Generator $faker,
         private readonly AreaSeeder $areaSeeder,
     ) {
@@ -30,7 +28,7 @@ final class EventSeeder
     {
         $events = [];
         for ($i = 0; $i < $count; $i++) {
-            $event = $this->eventFactory->create([
+            $event = Event::factory()->create([
                 'venue' => $this->faker->randomElement($venues),
                 'affiliate' => $this->faker->randomElement($affiliates),
             ]);

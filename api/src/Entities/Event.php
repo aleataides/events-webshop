@@ -17,6 +17,7 @@ class Event
 {
     use HasUuidId;
     use Timestampable;
+    use HasFactory;
 
     /**
      * @var Collection<int, Category>

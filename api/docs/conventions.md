@@ -12,15 +12,15 @@ count recursively into it. PSR-12 + Slim best practices. Use PHP 8.4 syntax
 where it simplifies code, e.g. `new Foo()->bar()` directly (no wrapping
 parens needed for a `new` expression's methods since 8.4).
 
-**Controllers** extend `App\Controllers\Controller` and are invoked as
+**Controllers** extend `App\Http\Controllers\Controller` and are invoked as
 `__invoke(Request $request): Response` — no `$response`/route-`$args`
 params to thread through, matching Symfony's `AbstractController` shape.
 `ControllerInvocationStrategy` (Slim's `InvocationStrategyInterface`,
 registered in `bootstrap/app.php`) copies route placeholders into request
 attributes and drops Slim's passed-in `$response`; the base class's
-`$this->json($data, $status = 200)` builds a fresh one instead, and
-`$this->affiliate($request)` reads the `AffiliateMiddleware`-set attribute
-(throws `MissingAffiliateContextException` if missing).
+`$this->json($data, $status = 200)` returns an `App\Http\JsonResponse`
+instead, and `$this->affiliate($request)` reads the `AffiliateMiddleware`-set
+attribute (throws `MissingAffiliateContextException` if missing).
 
 **Comments**: classes, methods, properties, and constants use a multi-line
 docblock (`/**\n * ...\n */`, max 2 lines of content, matching
@@ -29,6 +29,34 @@ docblock (`/**\n * ...\n */`, max 2 lines of content, matching
 `//` instead. Add either only when something actually needs explaining — not
 by default on every method, and never restating what the signature/name
 already says.
+
+## Folder structure (layer-first, PSR-4)
+
+```
+api/src/Http/          — Controllers, PSR-15 middleware, JsonResponse: the request/response layer.
+api/src/Services/      — business logic between controllers and repositories.
+api/src/Repositories/  — Doctrine custom repos, wired via #[ORM\Entity(repositoryClass:...)].
+api/src/Entities/      — Doctrine entities + shared traits (HasUuidId, Timestampable, HasFactory).
+api/src/Resources/     — the only classes allowed to serialize an entity to JSON.
+api/src/Factories/     — model factories (definition/make/create/createMany), used by Seeders,
+                          FixtureEventCommand, and tests alike.
+api/src/Seeders/       — Faker-driven bulk demo data, orchestrated by DemoDataSeeder.
+api/src/Console/       — CLI commands (not pluralized — not a domain collection).
+api/src/Enums/         — enums (HttpStatus, ...).
+api/src/Exceptions/    — DomainException hierarchy, mapped to HTTP status/error code by ErrorHandler.
+api/src/Shared/        — cross-cutting utilities that don't fit any folder above (not pluralized —
+                          a grab-bag, not a domain collection).
+api/routes/api.php     — route registration, kept separate from bootstrap/app.php.
+api/bootstrap/         — factories that build the app's dependency graph, not settings.
+api/config/            — plain settings arrays (doctrine/migrations' own config).
+api/migrations/        — generated migration classes.
+api/bin/console        — entrypoint: registers migrations + app.commands from the DI container.
+api/public/index.php   — HTTP entrypoint: builds the container + Slim app, runs it.
+api/tests/             — {Unit,Integration} mirror src/'s structure; tests/Support/ holds test infra.
+api/phpunit.xml, phpstan.neon, .php-cs-fixer.php  (kept at root — each tool
+  auto-discovers its config there by default; moving them would mean passing
+  an explicit --config/-c flag on every invocation for no benefit)
+```
 
 ## Base path & routing
 

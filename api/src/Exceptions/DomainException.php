@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
-use App\Shared\HttpStatus;
+use App\Enums\HttpStatus;
 use RuntimeException;
 
 /**

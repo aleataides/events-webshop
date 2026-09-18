@@ -58,40 +58,6 @@
   cost, once. Only `Integration` tests should touch a real DB at all — if a
   `Unit` test needs one, it isn't actually a unit test.
 
-## Folder structure (layer-first, PSR-4)
-
-```
-api/src/Controllers/{EventListController,EventDetailController,CategoryListController}.php
-api/src/Controllers/{Controller,ControllerInvocationStrategy}.php  (base class +
-  the Slim InvocationStrategy that invokes controllers as `(Request): Response`)
-api/src/Services/{EventService,CategoryService}.php
-api/src/Repositories/{EventRepository,CategoryRepository}.php  (Doctrine
-  custom repos, wired via #[ORM\Entity(repositoryClass:...)] on the entity)
-api/src/Entities/{Event,Area,Price,Category,Venue,Affiliate,HasUuidId,Timestampable}.php
-api/src/Resources/{EventListResource,EventDetailResource,CategoryResource,VenueResource,AreaResource,PriceResource}.php
-api/src/Seeders/{AffiliateSeeder,CategorySeeder,VenueSeeder,EventSeeder,AreaSeeder,PriceSeeder,DemoDataSeeder}.php
-api/src/Console/{SeedCommand,FixtureEventCommand}.php  (not pluralized —
-  not a collection of domain objects, matches Symfony's own convention)
-api/src/Middlewares/{AffiliateMiddleware,RequestIdMiddleware,CorsMiddleware,RateLimitMiddleware}.php
-api/src/Exceptions/{DomainException,EventNotFoundException,AffiliateNotFoundException,InvalidRequestException,MissingAffiliateContextException}.php
-api/src/Shared/{ErrorHandler,MoneyConvertible,HttpStatus,RequestContext,RequestContextProcessor,ValidatesQueryParams}.php  (not
-  pluralized — a grab-bag of cross-cutting utilities, not a domain collection)
-api/routes/api.php  (registers the `/api/{affiliateId}` route group on the
-  Slim app; kept separate from bootstrap/app.php so routes aren't buried
-  inside app-wiring code)
-api/bootstrap/{entity-manager,container,app,migrations}.php  (factories —
-  build services/dependency graphs, not settings — migrations.php returns a
-  Doctrine\Migrations\DependencyFactory, same shape as the others)
-api/config/migrations.config.php  (doctrine/migrations' own settings array)
-api/migrations/  (generated migration classes)
-api/bin/console  (entrypoint: registers migrations + app.commands from the DI container)
-api/public/index.php  (HTTP entrypoint: builds the container + Slim app, runs it)
-api/tests/{Unit,Integration}/... (mirrors src/ structure), tests/Support/RefreshDatabase.php
-api/phpunit.xml, phpstan.neon, .php-cs-fixer.php  (kept at root — each tool
-  auto-discovers its config there by default; moving them would mean passing
-  an explicit --config/-c flag on every invocation for no benefit)
-```
-
 ## Testing scope
 
 Unit tests (services) + integration tests (repositories+DB, endpoints via

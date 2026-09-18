@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Seeders;
 
 use App\Entities\Category;
-use App\Factories\CategoryFactory;
 
 final class CategorySeeder
 {
@@ -16,20 +15,14 @@ final class CategorySeeder
         'Comedy & Kabarett', 'Konzert', 'Theater', 'Sport', 'Familie', 'Party',
     ];
 
-    public function __construct(private readonly CategoryFactory $categoryFactory)
-    {
-    }
-
     /**
      * @return list<Category>
      */
     public function seed(): array
     {
-        $categories = [];
-        foreach (self::NAMES as $name) {
-            $categories[] = $this->categoryFactory->create(['name' => $name]);
-        }
-
-        return $categories;
+        return array_map(
+            static fn (string $name) => Category::factory()->create(['name' => $name]),
+            self::NAMES,
+        );
     }
 }

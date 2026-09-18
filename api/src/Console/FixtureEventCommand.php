@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Console;
 
 use App\Entities\Affiliate;
+use App\Entities\Area;
 use App\Entities\Category;
 use App\Entities\Event;
+use App\Entities\Price;
 use App\Entities\Venue;
-use App\Factories\ModelFactories;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,10 +26,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:fixture:event', description: 'Create one event fixture with specific attributes')]
 final class FixtureEventCommand extends Command
 {
-    public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ModelFactories $factories,
-    ) {
+    public function __construct(private readonly EntityManagerInterface $entityManager)
+    {
         parent::__construct();
     }
 
@@ -60,7 +59,7 @@ final class FixtureEventCommand extends Command
         $start = new DateTimeImmutable((string) $input->getOption('start'), new DateTimeZone('UTC'));
         $title = $input->getOption('title');
 
-        $event = $this->factories->event->create([
+        $event = Event::factory()->create([
             'venue' => $venue,
             'affiliate' => $affiliate,
             ...($title !== null ? ['title' => (string) $title] : []),
@@ -92,7 +91,7 @@ final class FixtureEventCommand extends Command
 
         foreach ($areasSpec as $areaSpec) {
             $capacity = (int) $areaSpec['capacity'];
-            $area = $this->factories->area->create([
+            $area = Area::factory()->create([
                 'event' => $event,
                 'name' => (string) $areaSpec['name'],
                 'capacity' => $capacity,
@@ -101,7 +100,7 @@ final class FixtureEventCommand extends Command
 
             foreach ($areaSpec['prices'] as $priceSpec) {
                 $basePriceCents = (int) round((float) $priceSpec['value'] * 100);
-                $this->factories->price->create([
+                Price::factory()->create([
                     'area' => $area,
                     'name' => (string) $priceSpec['name'],
                     'basePriceCents' => $basePriceCents,
@@ -120,7 +119,7 @@ final class FixtureEventCommand extends Command
             }
         }
 
-        return $this->factories->affiliate->create(is_string($name) ? ['name' => $name] : []);
+        return Affiliate::factory()->create(is_string($name) ? ['name' => $name] : []);
     }
 
     private function findOrCreateCategory(string $name): Category
@@ -130,7 +129,7 @@ final class FixtureEventCommand extends Command
             return $existing;
         }
 
-        return $this->factories->category->create(['name' => $name]);
+        return Category::factory()->create(['name' => $name]);
     }
 
     private function findOrCreateVenue(mixed $city): Venue
@@ -142,6 +141,6 @@ final class FixtureEventCommand extends Command
             }
         }
 
-        return $this->factories->venue->create(is_string($city) ? ['city' => $city] : []);
+        return Venue::factory()->create(is_string($city) ? ['city' => $city] : []);
     }
 }

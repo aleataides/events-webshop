@@ -16,6 +16,7 @@ class Area
 {
     use HasUuidId;
     use Timestampable;
+    use HasFactory;
 
     /**
      * @var Collection<int, Price>

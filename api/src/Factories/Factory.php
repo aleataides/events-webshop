@@ -52,4 +52,14 @@ abstract class Factory
 
         return $model;
     }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return list<TModel>
+     */
+    public function createMany(int $count, array $overrides = []): array
+    {
+        // range(1, 0) returns [1, 0], not [] — array_fill avoids that quirk.
+        return array_map(fn () => $this->create($overrides), array_fill(0, max(0, $count), null));
+    }
 }

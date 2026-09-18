@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Controllers\ControllerInvocationStrategy;
-use App\Middlewares\CorsMiddleware;
-use App\Middlewares\RateLimitMiddleware;
-use App\Middlewares\RequestIdMiddleware;
+use App\Http\Controllers\ControllerInvocationStrategy;
+use App\Http\Middlewares\CorsMiddleware;
+use App\Http\Middlewares\RateLimitMiddleware;
+use App\Http\Middlewares\RequestIdMiddleware;
 use App\Shared\ErrorHandler;
 use Psr\Container\ContainerInterface;
 use Slim\App;

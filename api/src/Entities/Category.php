@@ -14,6 +14,7 @@ class Category
 {
     use HasUuidId;
     use Timestampable;
+    use HasFactory;
 
     public function __construct(
         UuidInterface $id,

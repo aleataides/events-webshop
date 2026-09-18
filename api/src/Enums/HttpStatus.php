@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Shared;
+namespace App\Enums;
 
 /**
  * Only the statuses this API actually returns — not a full RFC enumeration.
