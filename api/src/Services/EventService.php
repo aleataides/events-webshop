@@ -6,7 +6,9 @@ namespace App\Services;
 
 use App\Entities\Affiliate;
 use App\Entities\Event;
+use App\Exceptions\EventNotFoundException;
 use App\Repositories\EventRepository;
+use App\Resources\EventDetailResource;
 use App\Resources\EventListResource;
 use DateTimeImmutable;
 use Predis\ClientInterface;
@@ -15,6 +17,8 @@ use Ramsey\Uuid\UuidInterface;
 final class EventService
 {
     private const int LIST_CACHE_TTL_SECONDS = 60;
+
+    private const int DETAIL_CACHE_TTL_SECONDS = 60;
 
     public function __construct(
         private readonly EventRepository $eventRepository,
@@ -67,6 +71,33 @@ final class EventService
         ];
 
         $this->redis->setex($cacheKey, self::LIST_CACHE_TTL_SECONDS, json_encode($result, JSON_THROW_ON_ERROR));
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getDetail(Affiliate $affiliate, UuidInterface $eventId): array
+    {
+        $cacheKey = sprintf('events:detail:%s:%s', $affiliate->getId()->toString(), $eventId->toString());
+
+        $cached = $this->redis->get($cacheKey);
+        if (is_string($cached)) {
+            /** @var array<string, mixed> $decoded */
+            $decoded = json_decode($cached, true, flags: JSON_THROW_ON_ERROR);
+
+            return $decoded;
+        }
+
+        $event = $this->eventRepository->findOneForAffiliate($affiliate, $eventId);
+        if (!$event instanceof Event) {
+            throw new EventNotFoundException($eventId->toString());
+        }
+
+        $result = new EventDetailResource($event)->toArray();
+
+        $this->redis->setex($cacheKey, self::DETAIL_CACHE_TTL_SECONDS, json_encode($result, JSON_THROW_ON_ERROR));
 
         return $result;
     }
