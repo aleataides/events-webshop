@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Cart\CartBuyController;
 use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CartItemDestroyController;
 use App\Http\Controllers\Cart\CartItemStoreController;
@@ -27,6 +28,7 @@ return static function (App $app, ContainerInterface $container): void {
             $cart->post('/items', CartItemStoreController::class);
             $cart->patch('/items/{itemId}', CartItemUpdateController::class);
             $cart->delete('/items/{itemId}', CartItemDestroyController::class);
+            $cart->post('/buy', CartBuyController::class);
         });
     })->add($container->get(AffiliateMiddleware::class));
 };

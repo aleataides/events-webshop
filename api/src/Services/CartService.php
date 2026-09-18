@@ -6,8 +6,11 @@ namespace App\Services;
 
 use App\Entities\Affiliate;
 use App\Entities\Cart;
+use App\Entities\Order;
+use App\Entities\OrderItem;
 use App\Entities\Price;
 use App\Entities\TicketReservation;
+use App\Exceptions\CartEmptyException;
 use App\Exceptions\CartExpiredException;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidRequestException;
@@ -17,6 +20,7 @@ use App\Repositories\AreaRepository;
 use App\Repositories\CartRepository;
 use App\Repositories\PriceRepository;
 use App\Resources\CartResource;
+use App\Resources\OrderResource;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
@@ -118,6 +122,34 @@ final class CartService
         $this->entityManager->flush();
 
         return new CartResource($cart)->toArray();
+    }
+
+    /**
+     * Atomically converts every reservation into a sale — see
+     * docs/shared/business-rules.md#buy--checkout. No payment gateway; this
+     * response IS the confirmation, there's no separate GET /orders/{id}.
+     *
+     * @return array<string, mixed>
+     */
+    public function buy(Affiliate $affiliate, ?string $cartIdRaw): array
+    {
+        $cart = $this->findValidCart($affiliate, $cartIdRaw);
+        if (!$cart instanceof Cart || $cart->getReservations()->isEmpty()) {
+            throw new CartEmptyException();
+        }
+
+        $order = new Order(Uuid::uuid7(), $affiliate);
+        foreach ($cart->getReservations() as $reservation) {
+            $reservation->getPrice()->getArea()->sell($reservation->getQty());
+            new OrderItem(Uuid::uuid7(), $order, $reservation->getPrice(), $reservation->getQty());
+            $this->entityManager->remove($reservation);
+        }
+
+        $this->entityManager->persist($order);
+        $this->entityManager->remove($cart);
+        $this->entityManager->flush();
+
+        return new OrderResource($order)->toArray();
     }
 
     private function adjustReservationQty(TicketReservation $reservation, int $newQty): void
