@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Entities;
 
+use App\Repositories\CategoryRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ORM\Table(name: 'category')]
 #[ORM\HasLifecycleCallbacks]
 class Category
