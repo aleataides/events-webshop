@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Pre-commit checks, path-aware. Setup: git config core.hooksPath .githooks
+set -euo pipefail
+
+staged() { git diff --cached --name-only --diff-filter=ACM; }
+
+web_files=$(staged | grep -E '^web/' || true)
+api_files=$(staged | grep -E '^api/' || true)
+
+if [ -n "$web_files" ]; then
+  echo "==> web: lint, typecheck, test"
+  docker compose exec -T web npm run lint
+  docker compose exec -T web npm run typecheck
+  docker compose exec -T web npm run test -- --run
+fi
+
+if [ -n "$api_files" ]; then
+  echo "==> api: cs-fixer, phpstan, test"
+  docker compose exec -T api composer cs-check
+  docker compose exec -T api composer stan
+  docker compose exec -T api composer test
+fi
+
+exit 0

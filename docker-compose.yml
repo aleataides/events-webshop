@@ -1,0 +1,65 @@
+services:
+  web:
+    build:
+      context: ./web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      - TZ=UTC
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+      - VITE_IMAGES_API_BASE_URL=${VITE_IMAGES_API_BASE_URL:-https://bo.light-stg.de}
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api:/app
+      - /app/vendor
+    environment:
+      - TZ=UTC
+      - APP_ENV=${APP_ENV:-local}
+      - DB_HOST=mariadb
+      - DB_NAME=${MARIADB_DATABASE:-event_webshop}
+      - DB_USER=${MARIADB_USER:-event_webshop}
+      - DB_PASSWORD=${MARIADB_PASSWORD:-event_webshop}
+      - REDIS_HOST=redis
+      - IMAGES_API_BASE_URL=${IMAGES_API_BASE_URL:-https://bo.light-stg.de}
+      - XDEBUG=${XDEBUG:-false}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  mariadb:
+    image: mariadb:11
+    environment:
+      - TZ=UTC
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-root}
+      - MARIADB_DATABASE=${MARIADB_DATABASE:-event_webshop}
+      - MARIADB_USER=${MARIADB_USER:-event_webshop}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD:-event_webshop}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  mariadb_data:

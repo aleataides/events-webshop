@@ -1,0 +1,20 @@
+# Env file (see docs/shared/infra.md — .env.example is committed instead)
+.env
+
+# Dependencies
+web/node_modules/
+api/vendor/
+
+# Build output
+web/dist/
+
+# PHP
+api/.phpunit.cache/
+api/var/cache/
+api/var/log/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
