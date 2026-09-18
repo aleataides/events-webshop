@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entities;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -39,6 +39,7 @@ class Area
     ) {
         $this->id = $id;
         $this->prices = new ArrayCollection();
+        $event->addArea($this);
     }
 
     public function getEvent(): Event
@@ -77,5 +78,12 @@ class Area
     public function getPrices(): Collection
     {
         return $this->prices;
+    }
+
+    public function addPrice(Price $price): void
+    {
+        if (!$this->prices->contains($price)) {
+            $this->prices->add($price);
+        }
     }
 }

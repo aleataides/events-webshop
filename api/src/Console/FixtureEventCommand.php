@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace App\Console;
 
-use App\Entity\Affiliate;
-use App\Entity\Area;
-use App\Entity\Category;
-use App\Entity\Event;
-use App\Entity\Price;
-use App\Entity\Venue;
+use App\Entities\Affiliate;
+use App\Entities\Category;
+use App\Entities\Event;
+use App\Entities\Venue;
+use App\Factories\ModelFactories;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
-use Faker\Generator;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -30,7 +27,7 @@ final class FixtureEventCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly Generator $faker,
+        private readonly ModelFactories $factories,
     ) {
         parent::__construct();
     }
@@ -56,32 +53,24 @@ final class FixtureEventCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $affiliate = $this->findOrCreateAffiliate((string) ($input->getOption('affiliate') ?? $this->faker->company()));
+        $affiliate = $this->findOrCreateAffiliate($input->getOption('affiliate'));
         $category = $this->findOrCreateCategory((string) ($input->getOption('category') ?? 'Comedy & Kabarett'));
-        $venue = $this->findOrCreateVenue((string) ($input->getOption('venue-city') ?? $this->faker->city()));
+        $venue = $this->findOrCreateVenue($input->getOption('venue-city'));
 
         $start = new DateTimeImmutable((string) $input->getOption('start'), new DateTimeZone('UTC'));
+        $title = $input->getOption('title');
 
-        $event = new Event(
-            Uuid::uuid7(),
-            (string) ($input->getOption('title') ?? $this->faker->words(3, true)),
-            $this->faker->optional()->sentence(4),
-            '<p>' . $this->faker->paragraphs(3, true) . '</p>',
-            $this->faker->optional()->sentence(12),
-            $start,
-            $start->modify('+3 hours'),
-            $start->modify('-1 minute'),
-            $start->modify('-30 minutes'),
-            $start,
-            'PUBLISHED',
-            'NORMAL',
-            $this->faker->uuid(),
-            $this->faker->name(),
-            $venue,
-            $affiliate,
-        );
+        $event = $this->factories->event->create([
+            'venue' => $venue,
+            'affiliate' => $affiliate,
+            ...($title !== null ? ['title' => (string) $title] : []),
+            'start' => $start,
+            'end' => $start->modify('+3 hours'),
+            'salesEnd' => $start->modify('-1 minute'),
+            'doorsOpen' => $start->modify('-30 minutes'),
+            'doorsClose' => $start,
+        ]);
         $event->addCategory($category);
-        $this->entityManager->persist($event);
 
         $this->createAreas($event, $input->getOption('areas'), (bool) $input->getOption('soldout'));
 
@@ -98,80 +87,61 @@ final class FixtureEventCommand extends Command
         $areasSpec ??= [[
             'name' => 'Freie Platzwahl',
             'capacity' => 20,
-            'prices' => [['name' => 'Normalpreis', 'value' => $this->faker->randomFloat(2, 15, 80)]],
+            'prices' => [['name' => 'Normalpreis', 'value' => random_int(1500, 8000) / 100]],
         ]];
 
         foreach ($areasSpec as $areaSpec) {
             $capacity = (int) $areaSpec['capacity'];
-            $area = new Area(Uuid::uuid7(), $event, (string) $areaSpec['name'], $capacity);
-            if ($soldOut) {
-                $area = new Area(Uuid::uuid7(), $event, (string) $areaSpec['name'], $capacity, 0, $capacity);
-            }
-            $this->entityManager->persist($area);
+            $area = $this->factories->area->create([
+                'event' => $event,
+                'name' => (string) $areaSpec['name'],
+                'capacity' => $capacity,
+                'soldQty' => $soldOut ? $capacity : 0,
+            ]);
 
             foreach ($areaSpec['prices'] as $priceSpec) {
-                $basePrice = (float) $priceSpec['value'];
-                $basePriceCents = (int) round($basePrice * 100);
-                $ticketFeeCents = (int) round($basePriceCents * 0.08);
-                $this->entityManager->persist(new Price(
-                    Uuid::uuid7(),
-                    $area,
-                    (string) $priceSpec['name'],
-                    $basePriceCents,
-                    $ticketFeeCents,
-                ));
+                $basePriceCents = (int) round((float) $priceSpec['value'] * 100);
+                $this->factories->price->create([
+                    'area' => $area,
+                    'name' => (string) $priceSpec['name'],
+                    'basePriceCents' => $basePriceCents,
+                    'ticketFeeCents' => (int) round($basePriceCents * 0.08),
+                ]);
             }
         }
     }
 
-    private function findOrCreateAffiliate(string $name): Affiliate
+    private function findOrCreateAffiliate(mixed $name): Affiliate
     {
-        $repository = $this->entityManager->getRepository(Affiliate::class);
-        $existing = $repository->findOneBy(['name' => $name]);
-        if ($existing instanceof Affiliate) {
-            return $existing;
+        if (is_string($name)) {
+            $existing = $this->entityManager->getRepository(Affiliate::class)->findOneBy(['name' => $name]);
+            if ($existing instanceof Affiliate) {
+                return $existing;
+            }
         }
 
-        $affiliate = new Affiliate(Uuid::uuid7(), $name, $this->faker->imageUrl(200, 200, 'business'));
-        $this->entityManager->persist($affiliate);
-
-        return $affiliate;
+        return $this->factories->affiliate->create(is_string($name) ? ['name' => $name] : []);
     }
 
     private function findOrCreateCategory(string $name): Category
     {
-        $repository = $this->entityManager->getRepository(Category::class);
-        $existing = $repository->findOneBy(['name' => $name]);
+        $existing = $this->entityManager->getRepository(Category::class)->findOneBy(['name' => $name]);
         if ($existing instanceof Category) {
             return $existing;
         }
 
-        $category = new Category(Uuid::uuid7(), $name);
-        $this->entityManager->persist($category);
-
-        return $category;
+        return $this->factories->category->create(['name' => $name]);
     }
 
-    private function findOrCreateVenue(string $city): Venue
+    private function findOrCreateVenue(mixed $city): Venue
     {
-        $repository = $this->entityManager->getRepository(Venue::class);
-        $existing = $repository->findOneBy(['city' => $city]);
-        if ($existing instanceof Venue) {
-            return $existing;
+        if (is_string($city)) {
+            $existing = $this->entityManager->getRepository(Venue::class)->findOneBy(['city' => $city]);
+            if ($existing instanceof Venue) {
+                return $existing;
+            }
         }
 
-        $venue = new Venue(
-            Uuid::uuid7(),
-            $this->faker->company(),
-            $this->faker->streetAddress(),
-            $this->faker->postcode(),
-            $city,
-            'DE',
-            (string) $this->faker->latitude(47, 55),
-            (string) $this->faker->longitude(6, 15),
-        );
-        $this->entityManager->persist($venue);
-
-        return $venue;
+        return $this->factories->venue->create(is_string($city) ? ['city' => $city] : []);
     }
 }

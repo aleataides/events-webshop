@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\UuidInterface;
@@ -36,6 +36,7 @@ class Price
         private string $currency = 'EUR',
     ) {
         $this->id = $id;
+        $area->addPrice($this);
     }
 
     public function getArea(): Area

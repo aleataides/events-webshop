@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entities;
 
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -167,5 +167,12 @@ class Event
     public function getAreas(): Collection
     {
         return $this->areas;
+    }
+
+    public function addArea(Area $area): void
+    {
+        if (!$this->areas->contains($area)) {
+            $this->areas->add($area);
+        }
     }
 }

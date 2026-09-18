@@ -12,6 +12,16 @@ count recursively into it. PSR-12 + Slim best practices. Use PHP 8.4 syntax
 where it simplifies code, e.g. `new Foo()->bar()` directly (no wrapping
 parens needed for a `new` expression's methods since 8.4).
 
+**Controllers** extend `App\Controllers\Controller` and are invoked as
+`__invoke(Request $request): Response` — no `$response`/route-`$args`
+params to thread through, matching Symfony's `AbstractController` shape.
+`ControllerInvocationStrategy` (Slim's `InvocationStrategyInterface`,
+registered in `bootstrap/app.php`) copies route placeholders into request
+attributes and drops Slim's passed-in `$response`; the base class's
+`$this->json($data, $status = 200)` builds a fresh one instead, and
+`$this->affiliate($request)` reads the `AffiliateMiddleware`-set attribute
+(throws `MissingAffiliateContextException` if missing).
+
 **Comments**: classes, methods, properties, and constants use a multi-line
 docblock (`/**\n * ...\n */`, max 2 lines of content, matching
 `api/tests/Support/RefreshDatabase.php`'s style) — never a single-line
