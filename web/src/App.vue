@@ -1,22 +1,33 @@
 <script setup lang="ts">
-import { useUiStore } from '@/stores/ui'
-import { storeToRefs } from 'pinia'
+import { getCart } from '@/api/cart'
+import AppHeader from '@/components/AppHeader.vue'
+import { getStoredCartId } from '@/lib/cartStorage'
+import { useAffiliateStore } from '@/stores/affiliate'
+import { useCartStore } from '@/stores/cart'
+import { onMounted } from 'vue'
 
-const { isLoading } = storeToRefs(useUiStore())
+// Router's initial navigation has already resolved by the time this
+// component mounts — see main.ts's `router.isReady().then(...)`.
+onMounted(async () => {
+  if (getStoredCartId() === null) {
+    return
+  }
+
+  const affiliateId = useAffiliateStore().affiliateId
+  if (affiliateId === null) {
+    return
+  }
+
+  const cart = await getCart(affiliateId)
+  if (cart) {
+    useCartStore().setCart(cart)
+  }
+})
 </script>
 
 <template>
   <v-app>
-    <v-app-bar flat border="b" color="surface">
-      <v-progress-linear
-        v-if="isLoading"
-        indeterminate
-        color="primary"
-        absolute
-        location="bottom"
-      />
-      <v-app-bar-title class="font-weight-black"> Event Webshop </v-app-bar-title>
-    </v-app-bar>
+    <AppHeader />
 
     <v-main>
       <router-view />

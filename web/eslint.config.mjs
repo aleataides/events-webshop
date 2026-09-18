@@ -1,4 +1,5 @@
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
+import eslintConfigPrettier from 'eslint-config-prettier'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unusedImports from 'eslint-plugin-unused-imports'
 import pluginVue from 'eslint-plugin-vue'
@@ -22,9 +23,8 @@ export default defineConfigWithVueTs(
     rules: {
       'unused-imports/no-unused-imports': 'error',
       'perfectionist/sort-imports': 'error',
-      // Prettier owns formatting; these two fight it over attribute/content line breaks.
-      'vue/max-attributes-per-line': 'off',
-      'vue/singleline-html-element-content-newline': 'off',
     },
   },
+  // Prettier owns formatting — disables every stylistic rule that could fight it.
+  eslintConfigPrettier,
 )

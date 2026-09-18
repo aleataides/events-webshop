@@ -1,24 +1,7 @@
+import type { Cart } from '@/types/cart'
+
 import { clearStoredCartId, setStoredCartId } from '@/lib/cartStorage'
 import { defineStore } from 'pinia'
-
-interface CartItem {
-  id: string
-  price: {
-    id: string
-    name: string
-    value: string
-    currency: string
-  }
-  qty: number
-  subtotal: string
-}
-
-interface Cart {
-  id: string
-  expiresAt: string
-  items: CartItem[]
-  total: string
-}
 
 /**
  * Read-through cache of the BE cart — backend is the source of truth, see
@@ -28,6 +11,9 @@ export const useCartStore = defineStore('cart', {
   state: () => ({
     cart: null as Cart | null,
   }),
+  getters: {
+    itemCount: (state): number => state.cart?.items.reduce((sum, item) => sum + item.qty, 0) ?? 0,
+  },
   actions: {
     setCart(cart: Cart): void {
       this.cart = cart

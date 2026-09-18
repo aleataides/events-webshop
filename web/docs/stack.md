@@ -12,9 +12,9 @@
   - `eslint-plugin-perfectionist` (import sorting only — its
     `sort-vue-attributes` rule left disabled, redundant with
     `vue/attributes-order`)
-  - Prettier run standalone (not via `eslint-plugin-prettier`) —
-    `vue/max-attributes-per-line` and `vue/singleline-html-element-content-newline`
-    disabled since they fight Prettier's own line-break choices.
+  - Prettier run standalone (not via `eslint-plugin-prettier`) +
+    `eslint-config-prettier` (disables every stylistic ESLint rule that could
+    fight Prettier's own formatting choices)
   - All auto-fixable, wired into the pre-commit hook + CI lint job.
 - **Map**: Leaflet + OpenStreetMap, lazy-loaded only when the map section is
   expanded.
