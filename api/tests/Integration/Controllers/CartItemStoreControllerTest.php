@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Controllers;
 
 use App\Entities\Area;
+use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\Support\IntegrationTestCase;
@@ -38,15 +40,16 @@ final class CartItemStoreControllerTest extends IntegrationTestCase
     }
 
     #[Test]
-    #[TestDox('adding to an existing cart reuses it and renews expiry')]
-    public function addingToExistingCartReusesItAndRenewsExpiry(): void
+    #[TestDox('adding a first item to an empty cart renews its expiry')]
+    public function addingFirstItemToEmptyCartRenewsExpiry(): void
     {
         $affiliate = $this->affiliateFactory->create();
         $venue = $this->venueFactory->create();
         $event = $this->eventFactory->create(['venue' => $venue, 'affiliate' => $affiliate]);
         $area = $this->areaFactory->create(['event' => $event, 'capacity' => 10]);
         $price = $this->priceFactory->create(['area' => $area]);
-        $cart = $this->cartFactory->create(['affiliate' => $affiliate]);
+        $almostExpired = new DateTimeImmutable('+1 minute', new DateTimeZone('UTC'));
+        $cart = $this->cartFactory->create(['affiliate' => $affiliate, 'expiresAt' => $almostExpired]);
         $this->entityManager->flush();
 
         $response = $this->post(
@@ -57,6 +60,31 @@ final class CartItemStoreControllerTest extends IntegrationTestCase
 
         self::assertSame(201, $response->status);
         self::assertSame($cart->getId()->toString(), $response->json['data']['id']);
+        self::assertGreaterThan($almostExpired->format('c'), $response->json['data']['expiresAt']);
+    }
+
+    #[Test]
+    #[TestDox('adding another item to a non-empty cart does not renew its expiry')]
+    public function addingAnotherItemToNonEmptyCartDoesNotRenewExpiry(): void
+    {
+        $affiliate = $this->affiliateFactory->create();
+        $venue = $this->venueFactory->create();
+        $event = $this->eventFactory->create(['venue' => $venue, 'affiliate' => $affiliate]);
+        $area = $this->areaFactory->create(['event' => $event, 'capacity' => 10]);
+        $price = $this->priceFactory->create(['area' => $area]);
+        $expiresAt = new DateTimeImmutable('+5 minutes', new DateTimeZone('UTC'));
+        $cart = $this->cartFactory->create(['affiliate' => $affiliate, 'expiresAt' => $expiresAt]);
+        $this->ticketReservationFactory->create(['cart' => $cart, 'price' => $price, 'qty' => 1]);
+        $this->entityManager->flush();
+
+        $response = $this->post(
+            "/api/{$affiliate->getId()->toString()}/cart/items",
+            ['priceId' => $price->getId()->toString(), 'qty' => 1],
+            ['X-Cart-Id' => $cart->getId()->toString()],
+        );
+
+        self::assertSame(201, $response->status);
+        self::assertSame($expiresAt->format('c'), $response->json['data']['expiresAt']);
     }
 
     #[Test]
