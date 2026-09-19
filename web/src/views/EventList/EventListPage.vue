@@ -4,7 +4,7 @@ import type { EventCategory, EventListItem } from '@/types/event'
 import { listCategories } from '@/api/categories'
 import { listEvents } from '@/api/events'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
-import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import EventCard from './components/EventCard.vue'
@@ -48,6 +48,17 @@ async function fetchPage(reset: boolean): Promise<void> {
   }
 }
 
+const hasDateFilter = computed(() => dateFrom.value !== '' || dateTo.value !== '')
+const activeFilterCount = computed(
+  () => Number(categoryId.value !== null) + Number(hasDateFilter.value),
+)
+
+function clearFilters(): void {
+  categoryId.value = null
+  dateFrom.value = ''
+  dateTo.value = ''
+}
+
 watch([categoryId, dateFrom, dateTo], () => fetchPage(true))
 
 watch(search, () => {
@@ -81,11 +92,18 @@ onUnmounted(() => {
 <template>
   <v-container class="py-8" style="max-width: 1440px">
     <div class="d-flex align-center ga-4 flex-wrap mb-8">
-      <v-menu>
+      <v-menu :close-on-content-click="false">
         <template #activator="{ props: menuProps }">
-          <v-btn variant="outlined" prepend-icon="mdi-tune-variant" v-bind="menuProps"
-            >Filter</v-btn
+          <v-badge
+            :content="activeFilterCount"
+            :model-value="activeFilterCount > 0"
+            color="primary"
+            floating
           >
+            <v-btn variant="outlined" prepend-icon="mdi-tune-variant" v-bind="menuProps"
+              >Filter</v-btn
+            >
+          </v-badge>
         </template>
         <v-card min-width="280" class="pa-4">
           <v-select
@@ -98,7 +116,16 @@ onUnmounted(() => {
             class="mb-2"
           />
           <v-text-field v-model="dateFrom" type="date" label="From" class="mb-2" />
-          <v-text-field v-model="dateTo" type="date" label="To" />
+          <v-text-field v-model="dateTo" type="date" label="To" class="mb-2" />
+          <v-btn
+            v-if="activeFilterCount > 0"
+            variant="text"
+            size="small"
+            block
+            @click="clearFilters"
+          >
+            Clear filters
+          </v-btn>
         </v-card>
       </v-menu>
 

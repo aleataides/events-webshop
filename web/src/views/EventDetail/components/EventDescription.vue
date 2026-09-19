@@ -13,7 +13,7 @@ const safeDescription = computed(() => DOMPurify.sanitize(description))
     <!-- eslint-disable-next-line vue/no-v-html -- sanitized via DOMPurify above -->
     <div class="text-body-2" v-html="safeDescription" />
   </div>
-  <v-btn variant="text" size="small" class="pl-0" @click="showFull = !showFull">
+  <v-btn variant="text" size="small" @click="showFull = !showFull">
     {{ showFull ? 'Show less' : 'Show more' }}
   </v-btn>
 </template>
