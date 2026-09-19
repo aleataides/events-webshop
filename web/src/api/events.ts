@@ -1,4 +1,4 @@
-import type { EventListItem } from '@/types/event'
+import type { EventDetail, EventListItem } from '@/types/event'
 import type { Paginated } from '@/types/pagination'
 
 import apiClient from '@/api/client'
@@ -18,4 +18,10 @@ export function listEvents(
   return apiClient
     .get<Paginated<EventListItem>>(`/api/${affiliateId}/events`, { params })
     .then((response) => response.data)
+}
+
+export function getEvent(affiliateId: string, eventId: string): Promise<EventDetail> {
+  return apiClient
+    .get<{ data: EventDetail }>(`/api/${affiliateId}/events/${eventId}`)
+    .then((response) => response.data.data)
 }
