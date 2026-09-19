@@ -1,0 +1,42 @@
+:root {
+  /* Typography colors */
+  --v-text-primary: #0a0a0a;
+  --v-text-secondary: #525252;
+  --v-text-muted: #737373;
+  --v-text-disabled: #a3a3a3;
+  --v-text-inverse: #ffffff;
+
+  /* Borders */
+  --v-border-default: 1px solid #e5e5e5;
+  --v-border-subtle: 1px solid #f0f0f0;
+  --v-border-active: 1px solid #0a0a0a;
+
+  /* Radii */
+  --v-radius-xs: 2px;
+  --v-radius-sm: 4px;
+  --v-radius-md: 6px;
+  --v-radius-full: 9999px;
+
+  /* Fonts */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+}
+
+body {
+  font-family: var(--font-primary);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
