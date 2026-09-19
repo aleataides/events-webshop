@@ -13,4 +13,7 @@ app.use(createPinia())
 app.use(router)
 app.use(vuetify)
 
-app.mount('#app')
+// Vue Router's initial navigation is async — mounting before it resolves
+// leaves route.params empty, which throws in any `:to` binding needing a
+// required param (e.g. AppHeader's cart link) and crashes the whole render.
+void router.isReady().then(() => app.mount('#app'))
