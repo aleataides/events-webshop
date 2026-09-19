@@ -2,9 +2,13 @@
 import { getCart } from '@/api/cart'
 import AppHeader from '@/components/AppHeader.vue'
 import { getStoredCartId } from '@/lib/cartStorage'
+import { RouteName } from '@/router/routeNames'
 import { useAffiliateStore } from '@/stores/affiliate'
 import { useCartStore } from '@/stores/cart'
 import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 // Router's initial navigation has already resolved by the time this
 // component mounts — see main.ts's `router.isReady().then(...)`.
@@ -27,7 +31,7 @@ onMounted(async () => {
 
 <template>
   <v-app>
-    <AppHeader />
+    <AppHeader v-if="route.name !== RouteName.NotFound" />
 
     <v-main>
       <router-view />

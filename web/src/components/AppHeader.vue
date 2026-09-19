@@ -1,12 +1,13 @@
 <script setup lang="ts">
+import { RouteName } from '@/router/routeNames'
+import { useAffiliateStore } from '@/stores/affiliate'
 import { useCartStore } from '@/stores/cart'
 import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
 
 const { isLoading } = storeToRefs(useUiStore())
 const { cart, itemCount } = storeToRefs(useCartStore())
-const route = useRoute()
+const { affiliateId } = storeToRefs(useAffiliateStore())
 </script>
 
 <template>
@@ -17,9 +18,11 @@ const route = useRoute()
 
     <v-spacer />
 
+    <!-- No affiliateId (e.g. root "/", 404) — nothing to link the cart to yet. -->
     <v-btn
       variant="text"
-      :to="{ name: 'cart', params: { affiliateId: route.params.affiliateId } }"
+      :disabled="affiliateId === null"
+      :to="affiliateId === null ? undefined : { name: RouteName.Cart, params: { affiliateId } }"
       class="mr-4"
     >
       <v-icon icon="mdi-shopping-outline" class="mr-2" />
