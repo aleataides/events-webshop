@@ -1,3 +1,4 @@
+import { RouteName } from '@/router/routeNames'
 import { useAffiliateStore } from '@/stores/affiliate'
 import { useUiStore } from '@/stores/ui'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -7,18 +8,23 @@ const router = createRouter({
   routes: [
     {
       path: '/:affiliateId/events',
-      name: 'event-list',
+      name: RouteName.EventList,
       component: () => import('@/views/EventList/EventListPage.vue'),
     },
     {
       path: '/:affiliateId/events/:eventId',
-      name: 'event-detail',
+      name: RouteName.EventDetail,
       component: () => import('@/views/EventDetail/EventDetailPage.vue'),
     },
     {
       path: '/:affiliateId/cart',
-      name: 'cart',
+      name: RouteName.Cart,
       component: () => import('@/views/Cart/CartPage.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: RouteName.NotFound,
+      component: () => import('@/views/NotFound/NotFoundPage.vue'),
     },
   ],
 })

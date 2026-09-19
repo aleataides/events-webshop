@@ -2,6 +2,7 @@
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import { useEventDetail } from '@/composables/useEventDetail'
 import { useTicketSelection } from '@/composables/useTicketSelection'
+import { RouteName } from '@/router/routeNames'
 import { useRoute, useRouter } from 'vue-router'
 
 import EventDescription from './components/EventDescription.vue'
@@ -23,7 +24,7 @@ const { selectedQty, totalQty, totalValue, submitting, selectTickets } = useTick
 
 async function handleSelect(): Promise<void> {
   await selectTickets()
-  await router.push({ name: 'cart', params: { affiliateId } })
+  await router.push({ name: RouteName.Cart, params: { affiliateId } })
 }
 </script>
 

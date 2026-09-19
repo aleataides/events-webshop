@@ -3,6 +3,7 @@ import type { EventListItem } from '@/types/event'
 
 import { formatEventDateTime } from '@/lib/formatDate'
 import { buildImageUrl } from '@/lib/imageUrl'
+import { RouteName } from '@/router/routeNames'
 import { useRoute } from 'vue-router'
 
 const { event } = defineProps<{ event: EventListItem }>()
@@ -13,7 +14,7 @@ const route = useRoute()
   <v-card
     variant="outlined"
     :to="{
-      name: 'event-detail',
+      name: RouteName.EventDetail,
       params: { affiliateId: route.params.affiliateId, eventId: event.id },
     }"
   >
