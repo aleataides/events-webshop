@@ -52,7 +52,7 @@ final class CartService
     }
 
     /**
-     * Lazily creates a cart if none was supplied — see
+     * Lazily creates a cart if none was supplied, see
      * docs/shared/business-rules.md#cart-identity.
      *
      * @return array<string, mixed>
@@ -70,6 +70,7 @@ final class CartService
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $cart = $this->findValidCart($affiliate, $cartIdRaw) ?? Cart::startNew(Uuid::uuid7(), $affiliate, $now);
+        $wasEmpty = $cart->getReservations()->isEmpty();
 
         if (!$this->areaRepository->tryReserve($price->getArea()->getId(), $qty)) {
             throw new InsufficientStockException($priceIdRaw);
@@ -77,13 +78,18 @@ final class CartService
 
         new TicketReservation(Uuid::uuid7(), $cart, $price, $qty);
         $this->entityManager->persist($cart);
-        $cart->renewExpiry($now);
+        if ($wasEmpty) {
+            $cart->renewExpiry($now);
+        }
         $this->entityManager->flush();
 
         return new CartResource($cart)->toArray();
     }
 
     /**
+     * Does not touch the cart's expiry clock — see
+     * docs/shared/business-rules.md#cart-expiry.
+     *
      * @return array<string, mixed>
      */
     public function updateItemQty(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw, int $newQty): array
@@ -101,14 +107,15 @@ final class CartService
             $this->adjustReservationQty($reservation, $newQty);
         }
 
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $cart->renewExpiry($now);
         $this->entityManager->flush();
 
         return new CartResource($cart)->toArray();
     }
 
     /**
+     * Does not touch the cart's expiry clock — see
+     * docs/shared/business-rules.md#cart-expiry.
+     *
      * @return array<string, mixed>
      */
     public function removeItem(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw): array
@@ -117,8 +124,6 @@ final class CartService
         $cart = $reservation->getCart();
         $this->releaseReservation($reservation);
 
-        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $cart->renewExpiry($now);
         $this->entityManager->flush();
 
         return new CartResource($cart)->toArray();

@@ -37,8 +37,10 @@ permanently (and incorrectly) marked unavailable.
 
 ## Cart expiry
 
-- One clock for the **whole cart**, reset on every add/edit — not per
-  reservation row.
+- One clock for the **whole cart**, not per reservation row. Renewed only when
+  an item is added to a cart that was **empty before that add** (a brand-new
+  cart, or one emptied out by prior edits/removals) — qty edits and removals
+  on an already-non-empty cart never touch it.
 - BE checks `now > cart.expires_at` on every cart read/mutation — authoritative
   over the FE's countdown timer (which is UX-only, and covers client clock
   drift / stale tabs).

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Controllers;
 
 use App\Entities\Area;
+use DateTimeImmutable;
+use DateTimeZone;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\TestDox;
 use Tests\Support\IntegrationTestCase;
@@ -112,6 +114,30 @@ final class CartItemUpdateControllerTest extends IntegrationTestCase
 
         self::assertSame(409, $response->status);
         self::assertSame('insufficient_stock', $response->json['error']['code']);
+    }
+
+    #[Test]
+    #[TestDox('does not renew the cart expiry')]
+    public function doesNotRenewCartExpiry(): void
+    {
+        $affiliate = $this->affiliateFactory->create();
+        $venue = $this->venueFactory->create();
+        $event = $this->eventFactory->create(['venue' => $venue, 'affiliate' => $affiliate]);
+        $area = $this->areaFactory->create(['event' => $event, 'capacity' => 10, 'reservedQty' => 2]);
+        $price = $this->priceFactory->create(['area' => $area]);
+        $expiresAt = new DateTimeImmutable('+5 minutes', new DateTimeZone('UTC'));
+        $cart = $this->cartFactory->create(['affiliate' => $affiliate, 'expiresAt' => $expiresAt]);
+        $reservation = $this->ticketReservationFactory->create(['cart' => $cart, 'price' => $price, 'qty' => 2]);
+        $this->entityManager->flush();
+
+        $response = $this->patch(
+            "/api/{$affiliate->getId()->toString()}/cart/items/{$reservation->getId()->toString()}",
+            ['qty' => 5],
+            ['X-Cart-Id' => $cart->getId()->toString()],
+        );
+
+        self::assertSame(200, $response->status);
+        self::assertSame($expiresAt->format('c'), $response->json['data']['expiresAt']);
     }
 
     #[Test]
