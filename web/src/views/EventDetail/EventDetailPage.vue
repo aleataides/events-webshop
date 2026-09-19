@@ -34,6 +34,16 @@ async function handleSelect(): Promise<void> {
   </v-container>
 
   <v-container v-else-if="event" class="py-8" style="max-width: 1440px">
+    <v-btn
+      variant="text"
+      size="small"
+      class="mb-4"
+      prepend-icon="mdi-arrow-left"
+      :to="{ name: RouteName.EventList, params: { affiliateId } }"
+    >
+      Back to events
+    </v-btn>
+
     <v-row>
       <v-col cols="12" md="7">
         <EventHero :event="event" />

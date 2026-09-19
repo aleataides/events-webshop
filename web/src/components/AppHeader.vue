@@ -14,7 +14,16 @@ const { affiliateId } = storeToRefs(useAffiliateStore())
   <v-app-bar flat border="b" color="surface">
     <v-progress-linear v-if="isLoading" indeterminate color="primary" absolute location="bottom" />
 
-    <v-app-bar-title class="font-weight-black">Event Webshop</v-app-bar-title>
+    <v-app-bar-title class="font-weight-black">
+      <router-link
+        v-if="affiliateId !== null"
+        :to="{ name: RouteName.EventList, params: { affiliateId } }"
+        class="text-decoration-none text-high-emphasis"
+      >
+        Event Webshop
+      </router-link>
+      <span v-else>Event Webshop</span>
+    </v-app-bar-title>
 
     <v-spacer />
 

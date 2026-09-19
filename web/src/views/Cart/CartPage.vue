@@ -2,6 +2,7 @@
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import { useCart } from '@/composables/useCart'
 import { useCountdown } from '@/composables/useCountdown'
+import { RouteName } from '@/router/routeNames'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -52,9 +53,19 @@ async function handleBuy(): Promise<void> {
   </v-container>
 
   <v-container v-else class="py-8" style="max-width: 720px">
+    <v-btn
+      variant="text"
+      size="small"
+      class="mb-2"
+      prepend-icon="mdi-arrow-left"
+      :to="{ name: RouteName.EventList, params: { affiliateId } }"
+    >
+      Continue shopping
+    </v-btn>
+
     <h1 class="text-h5 font-weight-bold mb-2">Shopping cart</h1>
 
-    <template v-if="cart">
+    <template v-if="cart && cart.items.length > 0">
       <p class="text-body-2 text-medium-emphasis mb-4">
         <v-icon icon="mdi-clock-outline" size="16" />
         {{ formatted }} minutes reserved for you

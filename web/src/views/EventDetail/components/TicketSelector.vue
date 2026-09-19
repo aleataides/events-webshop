@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { EventDetail } from '@/types/event'
 
+import { computed } from 'vue'
+
 import PriceStepper from './PriceStepper.vue'
 
-defineProps<{
+const props = defineProps<{
   event: EventDetail
   selectedQty: Record<string, number>
   totalQty: number
@@ -15,6 +17,16 @@ const emit = defineEmits<{
   'update:qty': [priceId: string, qty: number]
   select: []
 }>()
+
+const ctaLabel = computed(() => {
+  if (props.totalQty === 0) {
+    return 'Select tickets'
+  }
+
+  const ticketWord = props.totalQty === 1 ? 'ticket' : 'tickets'
+
+  return `${props.totalQty} ${ticketWord} — ${props.totalValue.toFixed(2)} €`
+})
 </script>
 
 <template>
@@ -47,7 +59,7 @@ const emit = defineEmits<{
     :loading="submitting"
     @click="emit('select')"
   >
-    Select {{ totalQty }} ticket{{ totalQty === 1 ? '' : 's' }} — {{ totalValue.toFixed(2) }} €
+    {{ ctaLabel }}
   </v-btn>
   <p class="text-caption text-medium-emphasis text-center mt-2">incl. VAT</p>
 </template>

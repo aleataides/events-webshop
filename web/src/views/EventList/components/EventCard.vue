@@ -33,7 +33,7 @@ const route = useRoute()
     </v-card-text>
 
     <v-card-actions class="px-4 pb-4">
-      <v-btn block color="primary" class="text-white">
+      <v-btn block variant="outlined" color="primary">
         <span v-if="event.soldout">Sold out</span>
         <span v-else-if="event.minPrice">from {{ event.minPrice }} € →</span>
         <span v-else>Not available</span>
@@ -41,3 +41,10 @@ const route = useRoute()
     </v-card-actions>
   </v-card>
 </template>
+
+<style scoped>
+/* Card is a router-link — keep it clickable without Vuetify's hover tint. */
+:deep(.v-card__overlay) {
+  opacity: 0 !important;
+}
+</style>
