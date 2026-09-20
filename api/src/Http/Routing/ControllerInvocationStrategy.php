@@ -17,12 +17,8 @@ use ReflectionParameter;
 use Slim\Interfaces\InvocationStrategyInterface;
 
 /**
- * Calls controllers as `(...$params): Response` — no Slim `$response` to
- * thread through (Controller::json() builds its own). Route placeholders
- * land as request attributes; each `__invoke` parameter is then resolved by
- * its type-hint: `ServerRequestInterface` gets the raw request, a
- * `FormRequest` subclass is built via `fromHttpRequest()`, and `Affiliate`
- * is read from the `AffiliateMiddleware`-set attribute.
+ * Calls controllers as `(...$params): Response`, resolving each `__invoke`
+ * parameter by its type-hint — see docs/conventions.md.
  */
 final class ControllerInvocationStrategy implements InvocationStrategyInterface
 {

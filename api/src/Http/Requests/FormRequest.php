@@ -9,14 +9,11 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Wraps the raw request so a controller can type-hint a concrete FormRequest
- * and call `validated()`, Laravel-style, instead of validating in the
- * controller body. Subclasses declare `rules()` (field => 'string'|'int');
- * `ControllerInvocationStrategy` builds the instance via `fromHttpRequest()`
- * when it sees the type-hint.
+ * and call `validated()`, Laravel-style — see docs/conventions.md.
  */
 abstract class FormRequest
 {
-    /** @var array<string, string|int>|null */
+    /** @var array<string, mixed>|null */
     private ?array $validated = null;
 
     final public function __construct(private readonly ServerRequestInterface $request)
@@ -37,17 +34,28 @@ abstract class FormRequest
      * Validates on first access (throws `InvalidRequestException`) and
      * memoizes the result.
      *
-     * @return array<string, string|int>
+     * @return array<string, mixed>
      */
     final public function validated(): array
     {
-        return $this->validated ??= $this->runRules();
+        return $this->validated ??= $this->validate();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function validate(): array
+    {
+        return $this->requireTypes($this->data(), $this->rules());
     }
 
     /**
      * @return array<string, 'string'|'int'>
      */
-    abstract protected function rules(): array;
+    protected function rules(): array
+    {
+        return [];
+    }
 
     /**
      * Values checked against `rules()`. Defaults to the parsed body;
@@ -63,14 +71,15 @@ abstract class FormRequest
     }
 
     /**
+     * @param array<string, mixed> $data
+     * @param array<string, 'string'|'int'> $types
      * @return array<string, string|int>
      */
-    private function runRules(): array
+    private function requireTypes(array $data, array $types): array
     {
-        $data = $this->data();
-        $validated = [];
+        $checked = [];
 
-        foreach ($this->rules() as $field => $type) {
+        foreach ($types as $field => $type) {
             $value = $data[$field] ?? null;
             $valid = match ($type) {
                 'string' => is_string($value),
@@ -78,22 +87,17 @@ abstract class FormRequest
             };
 
             if (!$valid) {
-                throw new InvalidRequestException($this->invalidMessage());
+                $fields = [];
+                foreach ($types as $f => $t) {
+                    $fields[] = "\"{$f}\" ({$t})";
+                }
+
+                throw new InvalidRequestException(implode(' and ', $fields) . ' are required.');
             }
 
-            $validated[$field] = $value;
+            $checked[$field] = $value;
         }
 
-        return $validated;
-    }
-
-    private function invalidMessage(): string
-    {
-        $fields = [];
-        foreach ($this->rules() as $field => $type) {
-            $fields[] = "\"{$field}\" ({$type})";
-        }
-
-        return implode(' and ', $fields) . ' are required.';
+        return $checked;
     }
 }
