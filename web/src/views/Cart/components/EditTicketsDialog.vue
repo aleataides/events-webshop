@@ -61,7 +61,9 @@ async function applyChanges(): Promise<void> {
           cartStore.setCart(await updateCartItem(affiliateId, current.id, newQty))
         }
       } else if (newQty > 0) {
-        cartStore.setCart(await addWithExpiryRetry(() => addCartItem(affiliateId, price.id, newQty)))
+        cartStore.setCart(
+          await addWithExpiryRetry(() => addCartItem(affiliateId, price.id, newQty)),
+        )
       }
     }
 
