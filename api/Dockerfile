@@ -1,7 +1,7 @@
 FROM php:8.4-fpm-alpine
 
 RUN docker-php-ext-install pdo_mysql opcache \
-    && apk add --no-cache $PHPIZE_DEPS linux-headers \
+    && apk add --no-cache $PHPIZE_DEPS linux-headers nginx \
     && pecl install redis xdebug \
     && docker-php-ext-enable redis xdebug
 
@@ -25,6 +25,8 @@ COPY api/ .
 COPY docker/api/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+COPY docker/api/nginx.conf /etc/nginx/http.d/default.conf
+
 EXPOSE 8080
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
+CMD ["nginx", "-g", "daemon off;"]
