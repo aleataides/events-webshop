@@ -68,5 +68,8 @@
 Unit tests (services) + integration tests (repositories+DB, endpoints via
 Slim's test client). No E2E.
 
+Every behavior change ships with a test covering it — but only that logic,
+not incidental/pre-existing coverage the change happened to touch.
+
 All commands run via `docker compose exec api ...` — see
 [../../docs/shared/infra.md](../../docs/shared/infra.md).
