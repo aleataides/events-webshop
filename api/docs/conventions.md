@@ -115,6 +115,8 @@ only `image_id` + `copyright`; URL built at render time from
 
 ## Endpoints (initial set)
 
+- `GET /api/{affiliateId}` — affiliate identity (`id`, `name`), for FE display
+  (e.g. header branding).
 - `GET /api/{affiliateId}/events` — cursor-paginated list, filters: `q` (name
   search), `category`, `date_from`/`date_to`.
 - `GET /api/{affiliateId}/events/{eventId}` — detail, incl. areas/prices.

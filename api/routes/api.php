@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\Cart\CartBuyController;
 use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CartItemDestroyController;
@@ -19,6 +20,7 @@ use Slim\App;
  */
 return static function (App $app, ContainerInterface $container): void {
     $app->group('/api/{affiliateId}', function ($group): void {
+        $group->get('', AffiliateController::class);
         $group->get('/events', EventListController::class);
         $group->get('/events/{eventId}', EventDetailController::class);
         $group->get('/categories', CategoryListController::class);

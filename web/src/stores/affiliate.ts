@@ -1,3 +1,4 @@
+import { getAffiliate } from '@/api/affiliate'
 import { defineStore } from 'pinia'
 
 /**
@@ -7,10 +8,15 @@ import { defineStore } from 'pinia'
 export const useAffiliateStore = defineStore('affiliate', {
   state: () => ({
     affiliateId: null as string | null,
+    affiliateName: null as string | null,
   }),
   actions: {
-    setAffiliateId(affiliateId: string): void {
+    async setAffiliateId(affiliateId: string): Promise<void> {
+      if (this.affiliateId === affiliateId) return
+
       this.affiliateId = affiliateId
+      this.affiliateName = null
+      this.affiliateName = (await getAffiliate(affiliateId)).name
     },
   },
 })

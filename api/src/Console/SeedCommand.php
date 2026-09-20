@@ -26,7 +26,7 @@ final class SeedCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('affiliates', null, InputOption::VALUE_REQUIRED, 'Number of affiliates', 2)
+            ->addOption('affiliates', null, InputOption::VALUE_REQUIRED, 'Number of Faker affiliates, in addition to the pinned one', 1)
             ->addOption('venues', null, InputOption::VALUE_REQUIRED, 'Number of venues', 5)
             ->addOption('events', null, InputOption::VALUE_REQUIRED, 'Number of events', 30);
     }

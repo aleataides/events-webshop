@@ -58,6 +58,13 @@ it's not idempotent (each run adds more demo rows rather than replacing
 existing ones), so auto-running it on every restart would keep piling up
 duplicate data.
 
+`app:seed` always seeds one pinned affiliate ("ATELIER THEATER GmbH") with a
+fixed real-world event catalog (`api/src/Seeders/Data/AtelierTheaterEvents.php`,
+extracted from a real EVENTIM.Light payload — see
+[domain-model.md](domain-model.md#real-source-data-reference-only-not-committed-as-fixtures)),
+find-or-created so repeat runs don't duplicate it, plus `--affiliates` (default
+1) additional Faker affiliates/events via the regular seeders.
+
 ## Dev-fixture tooling (the one project-specific skill)
 
 Beyond the generic Faker seeder, `bin/console app:fixture:event` (rich flags,
