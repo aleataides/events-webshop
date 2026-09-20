@@ -46,7 +46,11 @@ onMounted(async () => {
     <AppHeader v-if="route.name !== RouteName.NotFound" />
 
     <v-main>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="['EventListPage']">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </v-main>
 
     <AppFooter v-if="route.name !== RouteName.NotFound" />
