@@ -22,6 +22,20 @@ attributes and drops Slim's passed-in `$response`; the base class's
 instead, and `$this->affiliate($request)` reads the `AffiliateMiddleware`-set
 attribute (throws `MissingAffiliateContextException` if missing).
 
+**Request validation** stays out of controllers via `App\Http\Requests\FormRequest`
+(Laravel-style): a controller that needs a validated body type-hints a
+concrete `FormRequest` subclass instead of `Request` — e.g.
+`__invoke(CartItemStoreRequest $request)`. `ControllerInvocationStrategy`
+detects that type-hint via reflection and builds the instance through
+`FormRequest::fromHttpRequest()` instead of passing the raw PSR-7 request.
+Subclasses declare `rules()` (`field => 'string'|'int'`); the base class
+checks presence/type against `data()` (defaults to the parsed body, override
+to fold in route attributes) and throws `InvalidRequestException` on
+mismatch. `$request->validated()` returns the checked fields;
+`$request->request()` gets back the wrapped PSR-7 request for
+`$this->affiliate(...)`/`$this->cartId(...)`. Live in
+`api/src/Http/Requests/`, mirroring `Controllers/`'s subfolders.
+
 **Comments**: classes, methods, properties, and constants use a multi-line
 docblock (`/**\n * ...\n */`, max 2 lines of content, matching
 `api/tests/Support/RefreshDatabase.php`'s style) — never a single-line
