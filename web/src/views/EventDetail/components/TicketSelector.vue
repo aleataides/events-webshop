@@ -33,9 +33,15 @@ const ctaLabel = computed(() => {
 </script>
 
 <template>
-  <v-card v-if="event.priceInfo" variant="flat" color="surface" class="pa-4 mb-4">
+  <v-card v-if="!compact" variant="flat" color="surface" class="pa-4 mb-4">
     <p class="text-subtitle-1 font-weight-bold mb-2">Price and Access information</p>
-    <p class="text-body-2 text-medium-emphasis">{{ event.priceInfo }}</p>
+    <p class="text-body-2 text-medium-emphasis">
+      Unsere Ticketermäßigung gilt für SchülerInnen und StudentInnen bis 30 Jahre gegen Vorlage
+      eines entsprechenden gültigen Ausweises an der Abendkasse.
+    </p>
+    <p v-if="event.priceInfo" class="text-body-2 text-medium-emphasis mt-2">
+      {{ event.priceInfo }}
+    </p>
   </v-card>
 
   <v-card variant="flat" color="surface" class="pa-4 mb-4">
