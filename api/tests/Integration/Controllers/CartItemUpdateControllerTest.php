@@ -117,8 +117,8 @@ final class CartItemUpdateControllerTest extends IntegrationTestCase
     }
 
     #[Test]
-    #[TestDox('does not renew the cart expiry')]
-    public function doesNotRenewCartExpiry(): void
+    #[TestDox('renews the cart expiry on a qty increase')]
+    public function renewsCartExpiryOnQtyIncrease(): void
     {
         $affiliate = $this->affiliateFactory->create();
         $venue = $this->venueFactory->create();
@@ -133,6 +133,30 @@ final class CartItemUpdateControllerTest extends IntegrationTestCase
         $response = $this->patch(
             "/api/{$affiliate->getId()->toString()}/cart/items/{$reservation->getId()->toString()}",
             ['qty' => 5],
+            ['X-Cart-Id' => $cart->getId()->toString()],
+        );
+
+        self::assertSame(200, $response->status);
+        self::assertGreaterThan($expiresAt->format('c'), $response->json['data']['expiresAt']);
+    }
+
+    #[Test]
+    #[TestDox('does not renew the cart expiry on a qty decrease')]
+    public function doesNotRenewCartExpiryOnQtyDecrease(): void
+    {
+        $affiliate = $this->affiliateFactory->create();
+        $venue = $this->venueFactory->create();
+        $event = $this->eventFactory->create(['venue' => $venue, 'affiliate' => $affiliate]);
+        $area = $this->areaFactory->create(['event' => $event, 'capacity' => 10, 'reservedQty' => 5]);
+        $price = $this->priceFactory->create(['area' => $area]);
+        $expiresAt = new DateTimeImmutable('+5 minutes', new DateTimeZone('UTC'));
+        $cart = $this->cartFactory->create(['affiliate' => $affiliate, 'expiresAt' => $expiresAt]);
+        $reservation = $this->ticketReservationFactory->create(['cart' => $cart, 'price' => $price, 'qty' => 5]);
+        $this->entityManager->flush();
+
+        $response = $this->patch(
+            "/api/{$affiliate->getId()->toString()}/cart/items/{$reservation->getId()->toString()}",
+            ['qty' => 2],
             ['X-Cart-Id' => $cart->getId()->toString()],
         );
 

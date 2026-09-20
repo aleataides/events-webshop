@@ -8,7 +8,7 @@ const emit = defineEmits<{ close: [] }>()
     <v-card class="pa-4">
       <v-card-title>Your cart expired</v-card-title>
       <v-card-text>
-        The 15-minute reservation window ran out and your tickets were released back into stock.
+        Your reservation window ran out and your tickets were released back into stock.
       </v-card-text>
       <v-card-actions>
         <v-spacer />

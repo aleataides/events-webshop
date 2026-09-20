@@ -1,10 +1,11 @@
 import type { Order } from '@/types/order'
 
 import { buyCart, getCart, removeCartItem, updateCartItem } from '@/api/cart'
+import { useCountdown } from '@/composables/useCountdown'
 import { getApiErrorCode } from '@/lib/apiError'
 import { useCartStore } from '@/stores/cart'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 export function useCart(affiliateId: string) {
   const cartStore = useCartStore()
@@ -18,6 +19,15 @@ export function useCart(affiliateId: string) {
     expired.value = true
     cartStore.clearCart()
   }
+
+  // Own ticking timer, not just the BE's 410-on-mutation check — otherwise
+  // expiry only surfaces once the user triggers a request.
+  const { isExpired } = useCountdown(() => cart.value?.expiresAt ?? null)
+  watch(isExpired, (value) => {
+    if (value) {
+      expireLocally()
+    }
+  })
 
   async function runOrHandleExpiry(action: () => Promise<void>): Promise<void> {
     try {

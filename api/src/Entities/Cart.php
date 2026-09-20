@@ -21,9 +21,10 @@ class Cart
     use HasFactory;
 
     /**
-     * Whole-cart expiry clock — task.md's fixed 15-minute rule.
+     * Whole-cart expiry clock — task.md's 15-minute rule, overridable via
+     * CART_EXPIRY_MINUTES for local testing (see docs/shared/infra.md#env-vars).
      */
-    private const int EXPIRY_MINUTES = 15;
+    private const int DEFAULT_EXPIRY_MINUTES = 15;
 
     /**
      * @var Collection<int, TicketReservation>
@@ -48,7 +49,7 @@ class Cart
      */
     public static function startNew(UuidInterface $id, Affiliate $affiliate, DateTimeImmutable $now): self
     {
-        return new self($id, $affiliate, $now->modify('+' . self::EXPIRY_MINUTES . ' minutes'));
+        return new self($id, $affiliate, $now->modify('+' . self::expiryMinutes() . ' minutes'));
     }
 
     public function getAffiliate(): Affiliate
@@ -71,7 +72,12 @@ class Cart
      */
     public function renewExpiry(DateTimeImmutable $now): void
     {
-        $this->expiresAt = $now->modify('+' . self::EXPIRY_MINUTES . ' minutes');
+        $this->expiresAt = $now->modify('+' . self::expiryMinutes() . ' minutes');
+    }
+
+    private static function expiryMinutes(): int
+    {
+        return (int) (getenv('CART_EXPIRY_MINUTES') ?: self::DEFAULT_EXPIRY_MINUTES);
     }
 
     /**
