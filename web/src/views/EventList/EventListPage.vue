@@ -3,6 +3,7 @@ import type { EventCategory, EventListItem } from '@/types/event'
 
 import { listCategories } from '@/api/categories'
 import { listEvents } from '@/api/events'
+import EmptyState from '@/components/EmptyState.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -95,15 +96,9 @@ onUnmounted(() => {
       </v-col>
     </v-row>
 
-    <p v-if="!loading && events.length === 0" class="text-body-2 text-center py-8">
-      No events found.
-    </p>
+    <EmptyState v-if="!loading && events.length === 0" message="No events found." />
 
-    <div
-      ref="sentinel"
-      class="d-flex align-center justify-center py-8"
-      :style="events.length === 0 ? 'min-height: 60vh' : undefined"
-    >
+    <div ref="sentinel" class="d-flex align-center justify-center py-8">
       <LoadingSpinner v-if="loading" />
     </div>
   </v-container>
