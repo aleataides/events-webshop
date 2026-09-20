@@ -36,8 +36,9 @@ and caches the affiliate's `name` (`GET /api/{affiliateId}`) for display in
 ## Search/filter
 
 Text search on event **name only** (not location), plus category filter
-(dropdown/chips, static list fetched once — not faceted against other active
-filters) and date-range filter.
+(checkboxes inside a filter modal, applied via an explicit "Apply filters"
+button, static list fetched once — not faceted against other active filters,
+OR-matched when multiple are picked) and date-range filter.
 
 ## Lists
 

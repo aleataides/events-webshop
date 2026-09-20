@@ -15,7 +15,7 @@ const route = useRoute()
 const affiliateId = route.params.affiliateId as string
 
 const search = ref('')
-const categoryId = ref<string | null>(null)
+const categoryIds = ref<string[]>([])
 const dateFrom = ref('')
 const dateTo = ref('')
 
@@ -36,7 +36,7 @@ async function fetchPage(reset: boolean): Promise<void> {
   try {
     const result = await listEvents(affiliateId, {
       q: search.value || undefined,
-      category: categoryId.value ?? undefined,
+      category: categoryIds.value,
       date_from: dateFrom.value || undefined,
       date_to: dateTo.value || undefined,
       cursor: reset ? undefined : (cursor.value ?? undefined),
@@ -50,7 +50,7 @@ async function fetchPage(reset: boolean): Promise<void> {
   }
 }
 
-watch([categoryId, dateFrom, dateTo], () => fetchPage(true))
+watch([categoryIds, dateFrom, dateTo], () => fetchPage(true))
 
 watch(search, () => {
   clearTimeout(searchDebounce)
@@ -83,7 +83,7 @@ onUnmounted(() => {
 <template>
   <EventFilterBar
     v-model:search="search"
-    v-model:category-id="categoryId"
+    v-model:category-ids="categoryIds"
     v-model:date-from="dateFrom"
     v-model:date-to="dateTo"
     :categories="categories"

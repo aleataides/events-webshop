@@ -27,6 +27,24 @@ trait ValidatesQueryParams
         }
     }
 
+    /**
+     * @return list<UuidInterface>
+     */
+    private function parseUuidListParam(?string $value, string $paramName): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        $ids = array_filter(explode(',', $value), static fn (string $id) => $id !== '');
+
+        try {
+            return array_values(array_map(static fn (string $id) => Uuid::fromString($id), $ids));
+        } catch (InvalidUuidStringException) {
+            throw new InvalidRequestException(sprintf('"%s" must be a comma-separated list of valid UUIDs.', $paramName));
+        }
+    }
+
     private function parseDateParam(?string $value, string $paramName): ?DateTimeImmutable
     {
         if ($value === null || $value === '') {

@@ -1,70 +1,59 @@
 <script setup lang="ts">
 import type { EventCategory } from '@/types/event'
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+
+import EventFilterDialog from './EventFilterDialog.vue'
 
 defineProps<{ categories: EventCategory[] }>()
 
 const search = defineModel<string>('search', { required: true })
-const categoryId = defineModel<string | null>('categoryId', { required: true })
+const categoryIds = defineModel<string[]>('categoryIds', { required: true })
 const dateFrom = defineModel<string>('dateFrom', { required: true })
 const dateTo = defineModel<string>('dateTo', { required: true })
 
 const hasDateFilter = computed(() => dateFrom.value !== '' || dateTo.value !== '')
-const activeFilterCount = computed(
-  () => Number(categoryId.value !== null) + Number(hasDateFilter.value),
-)
+const activeFilterCount = computed(() => categoryIds.value.length + Number(hasDateFilter.value))
 
 function clearFilters(): void {
-  categoryId.value = null
+  categoryIds.value = []
   dateFrom.value = ''
   dateTo.value = ''
+}
+
+const dialogOpen = ref(false)
+
+function applyFilters(filters: { categoryIds: string[]; dateFrom: string; dateTo: string }): void {
+  categoryIds.value = filters.categoryIds
+  dateFrom.value = filters.dateFrom
+  dateTo.value = filters.dateTo
 }
 </script>
 
 <template>
   <div class="bg-surface border-b">
-    <v-container class="d-flex align-center ga-4 flex-wrap py-4" style="max-width: 1440px">
-      <v-menu :close-on-content-click="false">
-        <template #activator="{ props: menuProps }">
-          <v-badge
-            :content="activeFilterCount"
-            :model-value="activeFilterCount > 0"
-            color="primary"
-            floating
-          >
-            <v-btn
-              variant="outlined"
-              class="filter-btn"
-              prepend-icon="mdi-tune-variant"
-              v-bind="menuProps"
-              >Filter</v-btn
-            >
-          </v-badge>
-        </template>
-        <v-card min-width="280" class="pa-4">
-          <v-select
-            v-model="categoryId"
-            :items="categories"
-            item-title="name"
-            item-value="id"
-            label="Category"
-            clearable
-            class="mb-2"
-          />
-          <v-text-field v-model="dateFrom" type="date" label="From" class="mb-2" />
-          <v-text-field v-model="dateTo" type="date" label="To" class="mb-2" />
-          <v-btn
-            v-if="activeFilterCount > 0"
-            variant="text"
-            size="small"
-            block
-            @click="clearFilters"
-          >
-            Clear filters
-          </v-btn>
-        </v-card>
-      </v-menu>
+    <v-container class="d-flex align-center ga-2 flex-wrap py-4" style="max-width: 1440px">
+      <v-badge
+        :content="activeFilterCount"
+        :model-value="activeFilterCount > 0"
+        color="primary"
+        floating
+        offset-x="6"
+        offset-y="6"
+      >
+        <v-btn
+          variant="outlined"
+          class="filter-btn"
+          prepend-icon="mdi-tune-variant"
+          @click="dialogOpen = true"
+        >
+          Filter
+        </v-btn>
+      </v-badge>
+
+      <v-btn v-if="activeFilterCount > 0" variant="text" size="small" @click="clearFilters">
+        Clear filters
+      </v-btn>
 
       <v-spacer />
 
@@ -76,6 +65,15 @@ function clearFilters(): void {
         style="max-width: 320px"
       />
     </v-container>
+
+    <EventFilterDialog
+      v-model="dialogOpen"
+      :categories="categories"
+      :category-ids="categoryIds"
+      :date-from="dateFrom"
+      :date-to="dateTo"
+      @apply="applyFilters"
+    />
   </div>
 </template>
 
