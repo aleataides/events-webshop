@@ -42,6 +42,17 @@ Infinite scroll + cursor pagination — see
 [../../api/docs/conventions.md](../../api/docs/conventions.md#pagination) for
 the response shape.
 
+## Lazy loading
+
+Every route's page component is already lazy via the router's
+`() => import(...)` (one JS chunk per page). Beyond that, lazy-load
+(`defineAsyncComponent(() => import(...))`) only a component that's both
+conditionally rendered (`v-if`, not always visible on mount) **and** pulls in
+a heavy dependency — e.g. `VenueMap.vue` (behind `EventLocation.vue`'s "Show
+Map" toggle, drags in `leaflet` + its CSS, ~44 kB gzipped). Don't wrap plain
+Vuetify-only components (dialogs, cards) just because they're conditional —
+no real dependency weight to defer, so it's pure overhead.
+
 ## Cart expiry UX
 
 Countdown timer driven by the cart's `expires_at` (UX-only — backend is

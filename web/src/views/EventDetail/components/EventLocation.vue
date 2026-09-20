@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { Venue } from '@/types/event'
 
-import VenueMap from '@/components/VenueMap.vue'
-import { ref } from 'vue'
+import { defineAsyncComponent, ref } from 'vue'
+
+const VenueMap = defineAsyncComponent(() => import('@/components/VenueMap.vue'))
 
 defineProps<{ venue: Venue }>()
 
