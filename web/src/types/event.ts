@@ -34,6 +34,7 @@ export interface EventListItem {
   }
   minPrice: string | null
   maxPrice: string | null
+  currency: string | null
   venue: Venue
   categories: EventCategory[]
 }

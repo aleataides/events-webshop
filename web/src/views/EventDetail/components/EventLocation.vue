@@ -2,8 +2,11 @@
 import type { Venue } from '@/types/event'
 
 import VenueMap from '@/components/VenueMap.vue'
+import { ref } from 'vue'
 
 defineProps<{ venue: Venue }>()
+
+const showMap = ref(false)
 </script>
 
 <template>
@@ -14,15 +17,33 @@ defineProps<{ venue: Venue }>()
     </p>
   </div>
 
-  <v-expansion-panels variant="accordion" class="mb-4">
-    <v-expansion-panel title="Show map">
-      <template #text>
-        <VenueMap
-          :latitude="venue.geo.latitude"
-          :longitude="venue.geo.longitude"
-          :name="venue.name"
-        />
-      </template>
-    </v-expansion-panel>
-  </v-expansion-panels>
+  <button
+    type="button"
+    class="d-flex align-center ga-1 text-body-2 font-weight-medium mb-4 show-map-link"
+    @click="showMap = !showMap"
+  >
+    <span class="show-map-link__text">Show Map</span>
+    <v-icon :icon="showMap ? 'mdi-chevron-up' : 'mdi-chevron-down'" size="18" />
+  </button>
+
+  <VenueMap
+    v-if="showMap"
+    :latitude="venue.geo.latitude"
+    :longitude="venue.geo.longitude"
+    :name="venue.name"
+    class="mb-4"
+  />
 </template>
+
+<style scoped>
+.show-map-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.show-map-link:hover .show-map-link__text {
+  text-decoration: underline;
+}
+</style>

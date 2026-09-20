@@ -22,7 +22,7 @@ final class EventListResource
      */
     public function toArray(): array
     {
-        [$minCents, $maxCents, $soldOut] = $this->priceStats();
+        [$minCents, $maxCents, $soldOut, $currency] = $this->priceStats();
 
         return [
             'id' => $this->event->getId()->toString(),
@@ -42,6 +42,7 @@ final class EventListResource
             ],
             'minPrice' => $minCents !== null ? $this->toMajorUnits($minCents) : null,
             'maxPrice' => $maxCents !== null ? $this->toMajorUnits($maxCents) : null,
+            'currency' => $currency,
             'venue' => new VenueResource($this->event->getVenue())->toArray(),
             'categories' => array_map(
                 static fn (Category $category) => new CategoryResource($category)->toArray(),
@@ -51,22 +52,29 @@ final class EventListResource
     }
 
     /**
-     * @return array{0: ?int, 1: ?int, 2: bool}
+     * @return array{0: ?int, 1: ?int, 2: bool, 3: ?string}
      */
     private function priceStats(): array
     {
         $cents = [];
         $available = 0;
         $hasAreas = false;
+        $currency = null;
 
         foreach ($this->event->getAreas() as $area) {
             $hasAreas = true;
             $available += max(0, $area->getAvailable());
             foreach ($area->getPrices() as $price) {
                 $cents[] = $price->getValueCents();
+                $currency ??= $price->getCurrency();
             }
         }
 
-        return [$cents === [] ? null : min($cents), $cents === [] ? null : max($cents), $hasAreas && $available <= 0];
+        return [
+            $cents === [] ? null : min($cents),
+            $cents === [] ? null : max($cents),
+            $hasAreas && $available <= 0,
+            $currency,
+        ];
     }
 }

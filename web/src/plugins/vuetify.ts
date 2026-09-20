@@ -10,7 +10,7 @@ import * as directives from 'vuetify/directives'
 const monochromeTheme: ThemeDefinition = {
   dark: false,
   colors: {
-    background: '#FFFFFF',
+    background: '#FBF9F9',
     surface: '#FFFFFF',
     'surface-variant': '#F5F5F5',
     'surface-container-low': '#FBF9F9',
@@ -48,18 +48,23 @@ export default createVuetify({
     },
     VCard: {
       elevation: 0,
-      rounded: 'sm',
+      rounded: 'lg',
       border: 'sm',
     },
     VBtn: {
       elevation: 0,
-      rounded: 'sm',
-      height: 44,
+      rounded: 'lg',
     },
     VTextField: {
       variant: 'outlined',
-      density: 'comfortable',
-      rounded: 'sm',
+      density: 'compact',
+      rounded: 'lg',
+      hideDetails: 'auto',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'compact',
+      rounded: 'lg',
       hideDetails: 'auto',
     },
   },
