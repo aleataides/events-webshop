@@ -24,7 +24,9 @@ const route = useRoute()
 
     <v-card-text>
       <p class="font-mono text-caption text-disabled mb-2">Image: {{ event.image.copyright }}</p>
-      <h3 class="text-subtitle-1 font-weight-bold mb-2">{{ event.title }}</h3>
+      <h3 class="text-subtitle-1 font-weight-bold mb-2 event-title" :title="event.title">
+        {{ event.title }}
+      </h3>
 
       <v-divider class="mb-2" />
 
@@ -50,5 +52,14 @@ const route = useRoute()
 /* Card is a router-link — keep it clickable without Vuetify's hover tint. */
 :deep(.v-card__overlay) {
   opacity: 0 !important;
+}
+
+.event-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 2lh;
 }
 </style>
