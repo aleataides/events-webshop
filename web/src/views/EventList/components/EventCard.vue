@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { EventListItem } from '@/types/event'
 
+import EventImage from '@/components/EventImage.vue'
 import { formatEventDateTime } from '@/lib/formatDate'
-import { buildImageUrl } from '@/lib/imageUrl'
+import { formatMoney } from '@/lib/formatMoney'
 import { RouteName } from '@/router/routeNames'
 import { useRoute } from 'vue-router'
 
@@ -12,13 +13,14 @@ const route = useRoute()
 
 <template>
   <v-card
-    variant="outlined"
+    variant="flat"
+    color="surface"
     :to="{
       name: RouteName.EventDetail,
       params: { affiliateId: route.params.affiliateId, eventId: event.id },
     }"
   >
-    <v-img :src="buildImageUrl(event.image.id)" aspect-ratio="16/9" cover />
+    <EventImage :image-id="event.image.id" :aspect-ratio="16 / 9" cover />
 
     <v-card-text>
       <p class="font-mono text-caption text-disabled mb-2">Image: {{ event.image.copyright }}</p>
@@ -33,9 +35,11 @@ const route = useRoute()
     </v-card-text>
 
     <v-card-actions class="px-4 pb-4">
-      <v-btn block variant="outlined" color="primary">
+      <v-btn block variant="flat" color="primary" class="text-white">
         <span v-if="event.soldout">Sold out</span>
-        <span v-else-if="event.minPrice">from {{ event.minPrice }} € →</span>
+        <span v-else-if="event.minPrice"
+          >from {{ formatMoney(event.minPrice, event.currency ?? undefined) }} →</span
+        >
         <span v-else>Not available</span>
       </v-btn>
     </v-card-actions>

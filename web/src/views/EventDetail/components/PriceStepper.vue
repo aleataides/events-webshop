@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Price } from '@/types/event'
 
+import { formatMoney } from '@/lib/formatMoney'
+
 const { price, qty, max } = defineProps<{ price: Price; qty: number; max: number }>()
 const emit = defineEmits<{ 'update:qty': [qty: number] }>()
 </script>
@@ -9,13 +11,13 @@ const emit = defineEmits<{ 'update:qty': [qty: number] }>()
   <div class="d-flex align-center justify-space-between py-3">
     <div>
       <p class="text-body-1 font-weight-bold">{{ price.name }}</p>
-      <p class="text-body-2 text-medium-emphasis">{{ price.value }} €</p>
+      <p class="text-body-2 text-medium-emphasis">{{ formatMoney(price.value, price.currency) }}</p>
     </div>
 
     <div class="d-flex align-center ga-3">
       <v-btn
         icon="mdi-minus"
-        size="small"
+        size="x-small"
         variant="outlined"
         :disabled="qty <= 0"
         @click="emit('update:qty', qty - 1)"
@@ -25,7 +27,7 @@ const emit = defineEmits<{ 'update:qty': [qty: number] }>()
       }}</span>
       <v-btn
         icon="mdi-plus"
-        size="small"
+        size="x-small"
         variant="outlined"
         :disabled="qty >= max"
         @click="emit('update:qty', qty + 1)"

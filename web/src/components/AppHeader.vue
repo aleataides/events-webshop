@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatMoney } from '@/lib/formatMoney'
 import { RouteName } from '@/router/routeNames'
 import { useAffiliateStore } from '@/stores/affiliate'
 import { useCartStore } from '@/stores/cart'
@@ -11,32 +12,44 @@ const { affiliateId } = storeToRefs(useAffiliateStore())
 </script>
 
 <template>
-  <v-app-bar flat border="b" color="surface">
+  <v-app-bar flat border="b" color="surface" class="app-header">
     <v-progress-linear v-if="isLoading" indeterminate color="primary" absolute location="bottom" />
 
-    <v-app-bar-title class="font-weight-black">
-      <router-link
-        v-if="affiliateId !== null"
-        :to="{ name: RouteName.EventList, params: { affiliateId } }"
-        class="text-decoration-none text-high-emphasis"
+    <v-container class="d-flex align-center" style="max-width: 1440px">
+      <span class="text-h6 font-weight-black">
+        <router-link
+          v-if="affiliateId !== null"
+          :to="{ name: RouteName.EventList, params: { affiliateId } }"
+          class="text-decoration-none text-high-emphasis d-flex align-center"
+        >
+          <v-icon icon="mdi-ticket-confirmation-outline" class="mr-2" />
+          Event Webshop
+        </router-link>
+        <span v-else class="d-flex align-center">
+          <v-icon icon="mdi-ticket-confirmation-outline" class="mr-2" />
+          Event Webshop
+        </span>
+      </span>
+
+      <v-spacer />
+
+      <v-btn
+        v-if="affiliateId !== null && cart && itemCount > 0"
+        variant="outlined"
+        rounded="pill"
+        size="small"
+        :to="{ name: RouteName.Cart, params: { affiliateId } }"
       >
-        Event Webshop
-      </router-link>
-      <span v-else>Event Webshop</span>
-    </v-app-bar-title>
-
-    <v-spacer />
-
-    <!-- No affiliateId (e.g. root "/", 404) — nothing to link the cart to yet. -->
-    <v-btn
-      variant="text"
-      :disabled="affiliateId === null"
-      :to="affiliateId === null ? undefined : { name: RouteName.Cart, params: { affiliateId } }"
-      class="mr-4"
-    >
-      <v-icon icon="mdi-shopping-outline" class="mr-2" />
-      <span v-if="cart">{{ itemCount }} items • €{{ cart.total }}</span>
-      <span v-else>Cart</span>
-    </v-btn>
+        <v-icon icon="mdi-shopping-outline" class="mr-2" />
+        {{ itemCount }} items • {{ formatMoney(cart.total) }}
+        <v-icon icon="mdi-circle-small" class="ml-1" />
+      </v-btn>
+    </v-container>
   </v-app-bar>
 </template>
+
+<style scoped>
+.app-header {
+  border-block-end-color: #eeeeee !important;
+}
+</style>

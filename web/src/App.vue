@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getCart } from '@/api/cart'
+import AppFooter from '@/components/AppFooter.vue'
 import AppHeader from '@/components/AppHeader.vue'
 import { getApiErrorCode } from '@/lib/apiError'
 import { getStoredCartId } from '@/lib/cartStorage'
@@ -47,5 +48,7 @@ onMounted(async () => {
     <v-main>
       <router-view />
     </v-main>
+
+    <AppFooter v-if="route.name !== RouteName.NotFound" />
   </v-app>
 </template>

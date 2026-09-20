@@ -29,20 +29,19 @@ async function handleSelect(): Promise<void> {
 </script>
 
 <template>
-  <v-container v-if="loading" class="d-flex justify-center py-12">
+  <v-container v-if="loading" class="d-flex align-center justify-center" style="min-height: 60vh">
     <LoadingSpinner />
   </v-container>
 
   <v-container v-else-if="event" class="py-8" style="max-width: 1440px">
-    <v-btn
-      variant="text"
-      size="small"
-      class="mb-4"
-      prepend-icon="mdi-arrow-left"
+    <router-link
       :to="{ name: RouteName.EventList, params: { affiliateId } }"
+      class="d-flex align-center ga-1 text-body-2 font-weight-medium text-decoration-none text-high-emphasis mb-4 back-link"
+      style="width: fit-content"
     >
-      Back to events
-    </v-btn>
+      <v-icon icon="mdi-arrow-left" size="18" />
+      <span class="back-link__text">Back to events</span>
+    </router-link>
 
     <v-row>
       <v-col cols="12" md="7">
@@ -68,3 +67,9 @@ async function handleSelect(): Promise<void> {
     </v-row>
   </v-container>
 </template>
+
+<style scoped>
+.back-link:hover .back-link__text {
+  text-decoration: underline !important;
+}
+</style>

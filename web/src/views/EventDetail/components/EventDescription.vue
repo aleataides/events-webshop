@@ -13,12 +13,28 @@ const safeDescription = computed(() => DOMPurify.sanitize(description))
     <!-- eslint-disable-next-line vue/no-v-html -- sanitized via DOMPurify above -->
     <div class="text-body-2" v-html="safeDescription" />
   </div>
-  <v-btn variant="text" size="small" @click="showFull = !showFull">
-    {{ showFull ? 'Show less' : 'Show more' }}
-  </v-btn>
+  <button
+    type="button"
+    class="d-flex align-center ga-1 text-body-2 font-weight-medium show-more-link"
+    @click="showFull = !showFull"
+  >
+    <span class="show-more-link__text">{{ showFull ? 'Show less' : 'Show more' }}</span>
+    <v-icon :icon="showFull ? 'mdi-chevron-up' : 'mdi-chevron-down'" size="18" />
+  </button>
 </template>
 
 <style scoped>
+.show-more-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.show-more-link:hover .show-more-link__text {
+  text-decoration: underline;
+}
+
 .description-wrapper--clamped {
   position: relative;
   max-height: 6.4em;
