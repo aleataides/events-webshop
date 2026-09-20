@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Entities\Affiliate;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class AffiliateController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Affiliate $affiliate): Response
     {
-        $affiliate = $this->affiliate($request);
-
         return $this->json(['data' => ['id' => $affiliate->getId()->toString(), 'name' => $affiliate->getName()]]);
     }
 }

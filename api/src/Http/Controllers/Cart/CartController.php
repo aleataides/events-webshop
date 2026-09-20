@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Cart;
 
+use App\Entities\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Services\CartService;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -17,9 +18,9 @@ final class CartController extends Controller
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, Affiliate $affiliate): Response
     {
-        $data = $this->cartService->getCart($this->affiliate($request), $this->cartId($request));
+        $data = $this->cartService->getCart($affiliate, $this->cartId($request));
 
         return $this->json(['data' => $data]);
     }

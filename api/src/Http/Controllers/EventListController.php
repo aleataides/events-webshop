@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Entities\Affiliate;
 use App\Services\EventService;
 use App\Shared\ValidatesQueryParams;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -17,10 +18,8 @@ final class EventListController extends Controller
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, Affiliate $affiliate): Response
     {
-        $affiliate = $this->affiliate($request);
-
         $query = $request->getQueryParams();
         $limit = max(1, min(100, (int) ($query['limit'] ?? 20)));
 

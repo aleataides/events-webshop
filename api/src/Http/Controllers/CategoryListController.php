@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Entities\Affiliate;
 use App\Services\CategoryService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class CategoryListController extends Controller
 {
@@ -14,8 +14,8 @@ final class CategoryListController extends Controller
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Affiliate $affiliate): Response
     {
-        return $this->json(['data' => $this->categoryService->listPublished($this->affiliate($request))]);
+        return $this->json(['data' => $this->categoryService->listPublished($affiliate)]);
     }
 }

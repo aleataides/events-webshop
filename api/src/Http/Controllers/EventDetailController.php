@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Entities\Affiliate;
 use App\Exceptions\InvalidRequestException;
 use App\Services\EventService;
 use App\Shared\ValidatesQueryParams;
@@ -18,10 +19,8 @@ final class EventDetailController extends Controller
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, Affiliate $affiliate): Response
     {
-        $affiliate = $this->affiliate($request);
-
         $eventIdAttribute = $request->getAttribute('eventId');
         $eventId = $this->parseUuidParam(is_string($eventIdAttribute) ? $eventIdAttribute : null, 'eventId');
         if ($eventId === null) {
