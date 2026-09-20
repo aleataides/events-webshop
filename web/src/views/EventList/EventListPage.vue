@@ -5,9 +5,11 @@ import { listCategories } from '@/api/categories'
 import { listEvents } from '@/api/events'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import { useCart } from '@/composables/useCart'
 import { onActivated, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute } from 'vue-router'
 
+import ExpiredCartDialog from '../Cart/components/ExpiredCartDialog.vue'
 import EventCard from './components/EventCard.vue'
 import EventFilterBar from './components/EventFilterBar.vue'
 
@@ -17,6 +19,8 @@ defineOptions({ name: 'EventListPage' })
 
 const route = useRoute()
 const affiliateId = route.params.affiliateId as string
+
+const { expired } = useCart(affiliateId)
 
 const search = ref('')
 const categoryIds = ref<string[]>([])
@@ -121,4 +125,6 @@ onActivated(() => {
       <LoadingSpinner v-if="loading" />
     </div>
   </v-container>
+
+  <ExpiredCartDialog :model-value="expired" @close="expired = false" />
 </template>

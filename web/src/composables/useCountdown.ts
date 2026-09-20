@@ -3,8 +3,12 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 /**
  * UX-only ticking countdown to `expiresAt` — the BE re-checks expiry on
  * every request regardless, see docs/shared/business-rules.md#cart-expiry.
+ *
+ * @param totalSeconds Known full window length, for an accurate
+ *   `progressPercent` — deriving it from `expiresAt - now` instead would
+ *   read as "full" whenever the component (re)mounts partway through.
  */
-export function useCountdown(expiresAt: () => string | null) {
+export function useCountdown(expiresAt: () => string | null, totalSeconds = 0) {
   const now = ref(Date.now())
   let interval: ReturnType<typeof setInterval> | undefined
 
@@ -27,6 +31,10 @@ export function useCountdown(expiresAt: () => string | null) {
     return Math.max(0, Math.floor((new Date(target).getTime() - now.value) / 1000))
   })
 
+  const progressPercent = computed(() =>
+    totalSeconds > 0 ? (remainingSeconds.value / totalSeconds) * 100 : 0,
+  )
+
   const isExpired = computed(() => expiresAt() !== null && remainingSeconds.value === 0)
 
   const formatted = computed(() => {
@@ -36,5 +44,5 @@ export function useCountdown(expiresAt: () => string | null) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   })
 
-  return { remainingSeconds, isExpired, formatted }
+  return { remainingSeconds, isExpired, formatted, progressPercent }
 }

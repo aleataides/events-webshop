@@ -64,8 +64,8 @@ final class CartItemStoreControllerTest extends IntegrationTestCase
     }
 
     #[Test]
-    #[TestDox('adding another item to a non-empty cart does not renew its expiry')]
-    public function addingAnotherItemToNonEmptyCartDoesNotRenewExpiry(): void
+    #[TestDox('adding another item to a non-empty cart also renews its expiry')]
+    public function addingAnotherItemToNonEmptyCartRenewsExpiry(): void
     {
         $affiliate = $this->affiliateFactory->create();
         $venue = $this->venueFactory->create();
@@ -84,7 +84,7 @@ final class CartItemStoreControllerTest extends IntegrationTestCase
         );
 
         self::assertSame(201, $response->status);
-        self::assertSame($expiresAt->format('c'), $response->json['data']['expiresAt']);
+        self::assertGreaterThan($expiresAt->format('c'), $response->json['data']['expiresAt']);
     }
 
     #[Test]

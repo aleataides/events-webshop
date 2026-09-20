@@ -37,10 +37,13 @@ permanently (and incorrectly) marked unavailable.
 
 ## Cart expiry
 
-- One clock for the **whole cart**, not per reservation row. Renewed only when
-  an item is added to a cart that was **empty before that add** (a brand-new
-  cart, or one emptied out by prior edits/removals) — qty edits and removals
-  on an already-non-empty cart never touch it.
+- 15 minutes (`CART_EXPIRY_MINUTES` env var, default 15) — lower it locally to
+  test expiry without waiting; per-event override was rejected as unneeded
+  (see the seed-fixture skill).
+- One clock for the **whole cart**, not per reservation row. Renewed on any
+  net increase in reservations: `POST /cart/items` (new price line, cart
+  empty or not) and `PATCH /cart/items/{id}` when it raises qty. A `PATCH`
+  that lowers qty, or `DELETE`, never renews it — only adding more does.
 - BE checks `now > cart.expires_at` on every cart read/mutation — authoritative
   over the FE's countdown timer (which is UX-only, and covers client clock
   drift / stale tabs).

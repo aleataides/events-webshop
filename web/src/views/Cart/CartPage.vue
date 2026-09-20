@@ -6,7 +6,7 @@ import { useCart } from '@/composables/useCart'
 import { useCountdown } from '@/composables/useCountdown'
 import { formatMoney } from '@/lib/formatMoney'
 import { RouteName } from '@/router/routeNames'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import CartEventSection from './components/CartEventSection.vue'
@@ -17,19 +17,17 @@ import OrderConfirmation from './components/OrderConfirmation.vue'
 const route = useRoute()
 const affiliateId = route.params.affiliateId as string
 
-const { cart, loading, expired, order, removeItem, buy, expireLocally } = useCart(affiliateId)
+const { cart, loading, expired, order, removeItem, buy } = useCart(affiliateId)
 const submitting = ref(false)
 const orderDetailsOpen = ref(true)
 
-const { remainingSeconds, isExpired, formatted } = useCountdown(() => cart.value?.expiresAt ?? null)
-
-// The BE re-checks expiry on every request regardless — this just avoids
-// waiting for the next mutation to surface an already-expired cart.
-watch(isExpired, (value) => {
-  if (value) {
-    expireLocally()
-  }
-})
+// Own display-only countdown for the progress bar — expiry itself is
+// already watched inside useCart, shared with every other page.
+const CART_EXPIRY_SECONDS = Number(import.meta.env.VITE_CART_EXPIRY_MINUTES ?? 15) * 60
+const { formatted, progressPercent } = useCountdown(
+  () => cart.value?.expiresAt ?? null,
+  CART_EXPIRY_SECONDS,
+)
 
 const eventGroups = computed(() => {
   const groups: { eventId: string; items: CartItem[] }[] = []
@@ -97,11 +95,7 @@ async function handleBuy(): Promise<void> {
             <v-icon icon="mdi-clock-outline" size="16" />
             {{ formatted }} minutes reserved for you
           </p>
-          <v-progress-linear
-            :model-value="(remainingSeconds / (15 * 60)) * 100"
-            color="primary"
-            class="mb-6"
-          />
+          <v-progress-linear :model-value="progressPercent" color="primary" class="mb-6" />
 
           <button
             type="button"

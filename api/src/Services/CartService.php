@@ -52,8 +52,8 @@ final class CartService
     }
 
     /**
-     * Lazily creates a cart if none was supplied, see
-     * docs/shared/business-rules.md#cart-identity.
+     * Lazily creates a cart if none was supplied and always renews its
+     * expiry clock — see docs/shared/business-rules.md#cart-identity/#cart-expiry.
      *
      * @return array<string, mixed>
      */
@@ -70,7 +70,6 @@ final class CartService
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $cart = $this->findValidCart($affiliate, $cartIdRaw) ?? Cart::startNew(Uuid::uuid7(), $affiliate, $now);
-        $wasEmpty = $cart->getReservations()->isEmpty();
 
         if (!$this->areaRepository->tryReserve($price->getArea()->getId(), $qty)) {
             throw new InsufficientStockException($priceIdRaw);
@@ -78,17 +77,15 @@ final class CartService
 
         new TicketReservation(Uuid::uuid7(), $cart, $price, $qty);
         $this->entityManager->persist($cart);
-        if ($wasEmpty) {
-            $cart->renewExpiry($now);
-        }
+        $cart->renewExpiry($now);
         $this->entityManager->flush();
 
         return new CartResource($cart)->toArray();
     }
 
     /**
-     * Does not touch the cart's expiry clock — see
-     * docs/shared/business-rules.md#cart-expiry.
+     * Renews the cart's expiry clock on a qty increase, not a decrease —
+     * see docs/shared/business-rules.md#cart-expiry.
      *
      * @return array<string, mixed>
      */
@@ -100,11 +97,16 @@ final class CartService
 
         $reservation = $this->findReservationOrFail($affiliate, $cartIdRaw, $reservationIdRaw);
         $cart = $reservation->getCart();
+        $isIncrease = $newQty > $reservation->getQty();
 
         if ($newQty === 0) {
             $this->releaseReservation($reservation);
         } else {
             $this->adjustReservationQty($reservation, $newQty);
+        }
+
+        if ($isIncrease) {
+            $cart->renewExpiry(new DateTimeImmutable('now', new DateTimeZone('UTC')));
         }
 
         $this->entityManager->flush();
