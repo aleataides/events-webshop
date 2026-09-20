@@ -5,11 +5,15 @@ import { listCategories } from '@/api/categories'
 import { listEvents } from '@/api/events'
 import EmptyState from '@/components/EmptyState.vue'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
-import { onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { onActivated, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue'
+import { onBeforeRouteLeave, useRoute } from 'vue-router'
 
 import EventCard from './components/EventCard.vue'
 import EventFilterBar from './components/EventFilterBar.vue'
+
+// Named explicitly for App.vue's <keep-alive :include>  — relying on
+// filename inference would be fragile across build/minification.
+defineOptions({ name: 'EventListPage' })
 
 const route = useRoute()
 const affiliateId = route.params.affiliateId as string
@@ -77,6 +81,21 @@ onMounted(async () => {
 onUnmounted(() => {
   observer?.disconnect()
   clearTimeout(searchDebounce)
+})
+
+// router-link navigation isn't restored by Vue Router's scrollBehavior
+// (only browser back/forward is) — save/restore across keep-alive instead.
+// Captured in the route guard, not onDeactivated: by the time that fires,
+// keep-alive has already swapped in the (shorter) new page, and the browser
+// has clamped window.scrollY to fit it — too late to read the real value.
+let savedScrollY = 0
+
+onBeforeRouteLeave(() => {
+  savedScrollY = window.scrollY
+})
+
+onActivated(() => {
+  window.scrollTo(0, savedScrollY)
 })
 </script>
 
