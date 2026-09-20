@@ -5,29 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Entities\Affiliate;
-use App\Exceptions\InvalidRequestException;
+use App\Http\Requests\EventDetailRequest;
 use App\Services\EventService;
-use App\Shared\ValidatesQueryParams;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class EventDetailController extends Controller
 {
-    use ValidatesQueryParams;
-
     public function __construct(private readonly EventService $eventService)
     {
     }
 
-    public function __invoke(Request $request, Affiliate $affiliate): Response
+    public function __invoke(EventDetailRequest $request, Affiliate $affiliate): Response
     {
-        $eventIdAttribute = $request->getAttribute('eventId');
-        $eventId = $this->parseUuidParam(is_string($eventIdAttribute) ? $eventIdAttribute : null, 'eventId');
-        if ($eventId === null) {
-            throw new InvalidRequestException('"eventId" is required.');
-        }
-
-        $data = $this->eventService->getDetail($affiliate, $eventId);
+        $data = $this->eventService->getDetail($affiliate, $request->validated()['eventId']);
 
         return $this->json(['data' => $data]);
     }

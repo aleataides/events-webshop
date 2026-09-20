@@ -29,16 +29,25 @@ Any other type-hint is a `LogicException` at request time — there's no
 fallback/DI container lookup here, only these two resolvers.
 
 **Request validation** stays out of controllers via `App\Http\Requests\FormRequest`
-(Laravel-style): a controller that needs a validated body type-hints a
+(Laravel-style): a controller that needs a validated request type-hints a
 concrete `FormRequest` subclass instead of `Request` — e.g.
-`__invoke(CartItemStoreRequest $request, Affiliate $affiliate)`. Subclasses
-declare `rules()` (`field => 'string'|'int'`); the base class checks
-presence/type against `data()` (defaults to the parsed body, override to
-fold in route attributes) and throws `InvalidRequestException` on mismatch.
-`$request->validated()` returns the checked fields; `$request->request()`
-gets back the wrapped PSR-7 request for `$this->cartId(...)` (`Affiliate`
-comes from the injected param instead, not this). Live in
-`api/src/Http/Requests/`, mirroring `Controllers/`'s subfolders.
+`__invoke(CartItemStoreRequest $request, Affiliate $affiliate)`.
+`$request->validated()` returns the checked data (throws
+`InvalidRequestException` on mismatch); `$request->request()` gets back the
+wrapped PSR-7 request for anything else (`$this->cartId(...)` — `Affiliate`
+comes from the injected param instead). Two ways to implement it:
+
+- Declare `rules()` (`field => 'string'|'int'`) for the common "these fields
+  must be these primitive types" case — the default `validate()` checks
+  `data()` (the parsed body by default, override to fold in route
+  attributes) against it. Used by the `Cart/` requests.
+- Override `validate()` directly for anything `rules()` can't express — a
+  different format, route/query params instead of the body, optional
+  fields. `EventDetailRequest`/`EventListRequest` do this, reusing
+  `App\Shared\ValidatesQueryParams`'s UUID/date parsing (throws the same
+  `InvalidRequestException`s a plain query-param controller would).
+
+Live in `api/src/Http/Requests/`, mirroring `Controllers/`'s subfolders.
 
 **Comments**: classes, methods, properties, and constants use a multi-line
 docblock (`/**\n * ...\n */`, max 2 lines of content, matching

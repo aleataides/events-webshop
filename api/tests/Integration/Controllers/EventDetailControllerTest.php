@@ -43,6 +43,19 @@ final class EventDetailControllerTest extends IntegrationTestCase
     }
 
     #[Test]
+    #[TestDox('a non-UUID event id returns 400 invalid_request')]
+    public function nonUuidEventIdReturns400(): void
+    {
+        $affiliate = $this->affiliateFactory->create();
+        $this->entityManager->flush();
+
+        $response = $this->get("/api/{$affiliate->getId()->toString()}/events/not-a-uuid");
+
+        self::assertSame(400, $response->status);
+        self::assertSame('invalid_request', $response->json['error']['code']);
+    }
+
+    #[Test]
     #[TestDox('an event belonging to a different affiliate returns 404 (affiliate scoping)')]
     public function eventFromDifferentAffiliateReturns404(): void
     {
