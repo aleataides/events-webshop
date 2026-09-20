@@ -26,12 +26,14 @@ return static function (ContainerInterface $container): App {
     $app->addRoutingMiddleware();
     $app->addBodyParsingMiddleware();
 
+    // Must sit inside RequestId/Cors/RateLimit, not just before them —
+    // those decorate every response, but only see one if it isn't a thrown exception.
+    $errorMiddleware = $app->addErrorMiddleware(false, false, false);
+    $errorMiddleware->setDefaultErrorHandler($container->get(ErrorHandler::class));
+
     $app->add($container->get(RateLimitMiddleware::class));
     $app->add($container->get(CorsMiddleware::class));
     $app->add($container->get(RequestIdMiddleware::class));
-
-    $errorMiddleware = $app->addErrorMiddleware(false, false, false);
-    $errorMiddleware->setDefaultErrorHandler($container->get(ErrorHandler::class));
 
     return $app;
 };
