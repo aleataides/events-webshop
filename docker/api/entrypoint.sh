@@ -6,4 +6,5 @@ export XDEBUG_MODE="off"
 
 bin/console migrations:migrate --no-interaction
 
+php-fpm -D
 exec "$@"
