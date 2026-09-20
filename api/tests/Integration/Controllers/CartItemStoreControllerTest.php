@@ -142,4 +142,24 @@ final class CartItemStoreControllerTest extends IntegrationTestCase
         self::assertSame(400, $response->status);
         self::assertSame('invalid_request', $response->json['error']['code']);
     }
+
+    #[Test]
+    #[TestDox('rejects a non-int qty with 400')]
+    public function rejectsNonIntQty(): void
+    {
+        $affiliate = $this->affiliateFactory->create();
+        $venue = $this->venueFactory->create();
+        $event = $this->eventFactory->create(['venue' => $venue, 'affiliate' => $affiliate]);
+        $area = $this->areaFactory->create(['event' => $event]);
+        $price = $this->priceFactory->create(['area' => $area]);
+        $this->entityManager->flush();
+
+        $response = $this->post(
+            "/api/{$affiliate->getId()->toString()}/cart/items",
+            ['priceId' => $price->getId()->toString(), 'qty' => '2'],
+        );
+
+        self::assertSame(400, $response->status);
+        self::assertSame('invalid_request', $response->json['error']['code']);
+    }
 }

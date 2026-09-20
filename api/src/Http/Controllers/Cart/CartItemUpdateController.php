@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Cart;
 
-use App\Exceptions\InvalidRequestException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cart\CartItemUpdateRequest;
 use App\Services\CartService;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
 
 final class CartItemUpdateController extends Controller
 {
@@ -18,15 +17,16 @@ final class CartItemUpdateController extends Controller
     {
     }
 
-    public function __invoke(Request $request): Response
+    public function __invoke(CartItemUpdateRequest $request): Response
     {
-        $itemId = $request->getAttribute('itemId');
-        $body = $request->getParsedBody();
-        if (!is_string($itemId) || !is_array($body) || !is_int($body['qty'] ?? null)) {
-            throw new InvalidRequestException('"qty" (int) is required.');
-        }
+        $body = $request->validated();
 
-        $data = $this->cartService->updateItemQty($this->affiliate($request), $this->cartId($request), $itemId, $body['qty']);
+        $data = $this->cartService->updateItemQty(
+            $this->affiliate($request->request()),
+            $this->cartId($request->request()),
+            $body['itemId'],
+            $body['qty'],
+        );
 
         return $this->json(['data' => $data]);
     }
