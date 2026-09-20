@@ -34,7 +34,7 @@ router.beforeEach((to) => {
 
   const affiliateId = to.params.affiliateId
   if (typeof affiliateId === 'string') {
-    useAffiliateStore().setAffiliateId(affiliateId)
+    void useAffiliateStore().setAffiliateId(affiliateId)
   }
 })
 

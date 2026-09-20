@@ -28,7 +28,10 @@ for the full reasoning.
 
 Affiliate id as a route param: `/:affiliateId/events`,
 `/:affiliateId/events/:eventId`. Vue Router navigation guards (`beforeEach`/
-`afterEach`) drive a global loading indicator between route transitions.
+`afterEach`) drive a global loading indicator between route transitions. The
+same guard resolves `affiliateId` into the affiliate store, which also fetches
+and caches the affiliate's `name` (`GET /api/{affiliateId}`) for display in
+`AppHeader.vue`.
 
 ## Search/filter
 

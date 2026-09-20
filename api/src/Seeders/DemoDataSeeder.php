@@ -11,12 +11,15 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class DemoDataSeeder
 {
+    private const string PINNED_AFFILIATE_NAME = 'ATELIER THEATER GmbH';
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly AffiliateSeeder $affiliateSeeder,
         private readonly CategorySeeder $categorySeeder,
         private readonly VenueSeeder $venueSeeder,
         private readonly EventSeeder $eventSeeder,
+        private readonly AtelierTheaterEventSeeder $atelierTheaterEventSeeder,
     ) {
     }
 
@@ -25,18 +28,21 @@ final class DemoDataSeeder
      */
     public function seed(int $affiliateCount, int $venueCount, int $eventCount): array
     {
-        $affiliates = $this->affiliateSeeder->seed($affiliateCount);
+        $pinnedAffiliate = $this->affiliateSeeder->seedPinned(self::PINNED_AFFILIATE_NAME);
+        $fakerAffiliates = $this->affiliateSeeder->seed($affiliateCount);
         $categories = $this->categorySeeder->seed();
         $venues = $this->venueSeeder->seed($venueCount);
-        $events = $this->eventSeeder->seed($eventCount, $affiliates, $categories, $venues);
+
+        $pinnedEvents = $this->atelierTheaterEventSeeder->seed($pinnedAffiliate, $categories);
+        $fakerEvents = $this->eventSeeder->seed($eventCount, $fakerAffiliates, $categories, $venues);
 
         $this->entityManager->flush();
 
         return [
-            'affiliates' => count($affiliates),
+            'affiliates' => count($fakerAffiliates) + 1,
             'categories' => count($categories),
             'venues' => count($venues),
-            'events' => count($events),
+            'events' => count($pinnedEvents) + count($fakerEvents),
         ];
     }
 }

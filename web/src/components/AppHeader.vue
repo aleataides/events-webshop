@@ -8,7 +8,7 @@ import { storeToRefs } from 'pinia'
 
 const { isLoading } = storeToRefs(useUiStore())
 const { cart, itemCount } = storeToRefs(useCartStore())
-const { affiliateId } = storeToRefs(useAffiliateStore())
+const { affiliateId, affiliateName } = storeToRefs(useAffiliateStore())
 </script>
 
 <template>
@@ -24,6 +24,12 @@ const { affiliateId } = storeToRefs(useAffiliateStore())
         >
           <v-icon icon="mdi-ticket-confirmation-outline" class="mr-2" />
           Event Webshop
+          <span
+            v-if="affiliateName"
+            class="text-body-2 text-medium-emphasis font-weight-regular ml-2"
+          >
+            · {{ affiliateName }}
+          </span>
         </router-link>
         <span v-else class="d-flex align-center">
           <v-icon icon="mdi-ticket-confirmation-outline" class="mr-2" />
@@ -42,7 +48,6 @@ const { affiliateId } = storeToRefs(useAffiliateStore())
       >
         <v-icon icon="mdi-shopping-outline" class="mr-2" />
         {{ itemCount }} items • {{ formatMoney(cart.total) }}
-        <v-icon icon="mdi-circle-small" class="ml-1" />
       </v-btn>
     </v-container>
   </v-app-bar>
