@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getCart } from '@/api/cart'
 import AppHeader from '@/components/AppHeader.vue'
+import { getApiErrorCode } from '@/lib/apiError'
 import { getStoredCartId } from '@/lib/cartStorage'
 import { RouteName } from '@/router/routeNames'
 import { useAffiliateStore } from '@/stores/affiliate'
@@ -22,9 +23,19 @@ onMounted(async () => {
     return
   }
 
-  const cart = await getCart(affiliateId)
-  if (cart) {
-    useCartStore().setCart(cart)
+  try {
+    const cart = await getCart(affiliateId)
+    if (cart) {
+      useCartStore().setCart(cart)
+    }
+  } catch (error) {
+    // A stale/expired cart id must not linger forever — see the 410 loop
+    // this used to cause once every retry kept reusing the dead id.
+    if (getApiErrorCode(error) !== 'cart_expired') {
+      throw error
+    }
+
+    useCartStore().clearCart()
   }
 })
 </script>

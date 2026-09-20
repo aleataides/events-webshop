@@ -1,6 +1,7 @@
 import type { EventDetail } from '@/types/event'
 
 import { addCartItem } from '@/api/cart'
+import { addWithExpiryRetry } from '@/lib/cartExpiry'
 import { useCartStore } from '@/stores/cart'
 import { computed, type Ref, ref } from 'vue'
 
@@ -35,7 +36,7 @@ export function useTicketSelection(affiliateId: string, event: Ref<EventDetail |
       const cartStore = useCartStore()
       for (const [priceId, qty] of Object.entries(selectedQty.value)) {
         if (qty > 0) {
-          const cart = await addCartItem(affiliateId, priceId, qty)
+          const cart = await addWithExpiryRetry(() => addCartItem(affiliateId, priceId, qty))
           cartStore.setCart(cart)
         }
       }

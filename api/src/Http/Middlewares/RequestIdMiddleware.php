@@ -28,6 +28,10 @@ final class RequestIdMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request->withAttribute('requestId', $requestId));
 
-        return $response->withHeader('X-Request-Id', $requestId);
+        // Every response here is per-cart/per-affiliate dynamic data — the
+        // cart id lives in a header, invisible to the browser's URL-keyed cache.
+        return $response
+            ->withHeader('X-Request-Id', $requestId)
+            ->withHeader('Cache-Control', 'no-store');
     }
 }
