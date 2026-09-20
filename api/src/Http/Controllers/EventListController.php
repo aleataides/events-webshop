@@ -27,7 +27,7 @@ final class EventListController extends Controller
         $result = $this->eventService->listPublished(
             $affiliate,
             isset($query['q']) && $query['q'] !== '' ? (string) $query['q'] : null,
-            $this->parseUuidParam(isset($query['category']) ? (string) $query['category'] : null, 'category'),
+            $this->parseUuidListParam(isset($query['category']) ? (string) $query['category'] : null, 'category'),
             $this->parseDateParam(isset($query['date_from']) ? (string) $query['date_from'] : null, 'date_from'),
             $this->parseDateParam(isset($query['date_to']) ? (string) $query['date_to'] : null, 'date_to'),
             $this->parseUuidParam(isset($query['cursor']) ? (string) $query['cursor'] : null, 'cursor'),

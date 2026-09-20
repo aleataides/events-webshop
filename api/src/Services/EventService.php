@@ -27,18 +27,19 @@ final class EventService
     }
 
     /**
+     * @param list<UuidInterface> $categoryIds
      * @return array{items: list<array<string, mixed>>, nextCursor: ?string, hasMore: bool}
      */
     public function listPublished(
         Affiliate $affiliate,
         ?string $search,
-        ?UuidInterface $categoryId,
+        array $categoryIds,
         ?DateTimeImmutable $dateFrom,
         ?DateTimeImmutable $dateTo,
         ?UuidInterface $cursor,
         int $limit,
     ): array {
-        $cacheKey = $this->buildListCacheKey($affiliate, $search, $categoryId, $dateFrom, $dateTo, $cursor, $limit);
+        $cacheKey = $this->buildListCacheKey($affiliate, $search, $categoryIds, $dateFrom, $dateTo, $cursor, $limit);
 
         $cached = $this->redis->get($cacheKey);
         if (is_string($cached)) {
@@ -51,7 +52,7 @@ final class EventService
         $found = $this->eventRepository->findPublishedForAffiliate(
             $affiliate,
             $search,
-            $categoryId,
+            $categoryIds,
             $dateFrom,
             $dateTo,
             $cursor,
@@ -102,18 +103,24 @@ final class EventService
         return $result;
     }
 
+    /**
+     * @param list<UuidInterface> $categoryIds
+     */
     private function buildListCacheKey(
         Affiliate $affiliate,
         ?string $search,
-        ?UuidInterface $categoryId,
+        array $categoryIds,
         ?DateTimeImmutable $dateFrom,
         ?DateTimeImmutable $dateTo,
         ?UuidInterface $cursor,
         int $limit,
     ): string {
+        $sortedCategoryIds = array_map(static fn (UuidInterface $id) => $id->toString(), $categoryIds);
+        sort($sortedCategoryIds);
+
         $fingerprint = md5(serialize([
             $search,
-            $categoryId?->toString(),
+            $sortedCategoryIds,
             $dateFrom?->format('c'),
             $dateTo?->format('c'),
             $cursor?->toString(),

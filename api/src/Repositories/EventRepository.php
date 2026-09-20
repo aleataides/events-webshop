@@ -18,12 +18,13 @@ use Ramsey\Uuid\UuidInterface;
 final class EventRepository extends EntityRepository
 {
     /**
+     * @param list<UuidInterface> $categoryIds
      * @return array{items: list<Event>, hasMore: bool}
      */
     public function findPublishedForAffiliate(
         Affiliate $affiliate,
         ?string $search,
-        ?UuidInterface $categoryId,
+        array $categoryIds,
         ?DateTimeImmutable $dateFrom,
         ?DateTimeImmutable $dateTo,
         ?UuidInterface $cursor,
@@ -42,10 +43,14 @@ final class EventRepository extends EntityRepository
         if ($search !== null && $search !== '') {
             $idQuery->andWhere('e.title LIKE :search')->setParameter('search', '%' . $search . '%');
         }
-        if ($categoryId instanceof UuidInterface) {
-            $idQuery->join('e.categories', 'c')
-                ->andWhere('c.id = :categoryId')
-                ->setParameter('categoryId', $categoryId, UuidBinaryType::NAME);
+        if ($categoryIds !== []) {
+            // distinct(): an event matching 2+ of the selected categories
+            // would otherwise fan out into duplicate rows via the join.
+            $categoryIdBytes = array_map(static fn (UuidInterface $id) => $id->getBytes(), $categoryIds);
+            $idQuery->distinct()
+                ->join('e.categories', 'c')
+                ->andWhere('c.id IN (:categoryIds)')
+                ->setParameter('categoryIds', $categoryIdBytes, ArrayParameterType::BINARY);
         }
         if ($dateFrom instanceof DateTimeImmutable) {
             $idQuery->andWhere('e.start >= :dateFrom')->setParameter('dateFrom', $dateFrom);

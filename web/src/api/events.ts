@@ -5,7 +5,7 @@ import apiClient from '@/api/client'
 
 export interface EventListParams {
   q?: string
-  category?: string
+  category?: string[]
   date_from?: string
   date_to?: string
   cursor?: string
@@ -13,10 +13,12 @@ export interface EventListParams {
 
 export function listEvents(
   affiliateId: string,
-  params: EventListParams,
+  { category, ...params }: EventListParams,
 ): Promise<Paginated<EventListItem>> {
   return apiClient
-    .get<Paginated<EventListItem>>(`/api/${affiliateId}/events`, { params })
+    .get<Paginated<EventListItem>>(`/api/${affiliateId}/events`, {
+      params: { ...params, category: category?.length ? category.join(',') : undefined },
+    })
     .then((response) => response.data)
 }
 

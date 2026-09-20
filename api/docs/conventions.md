@@ -118,7 +118,7 @@ only `image_id` + `copyright`; URL built at render time from
 - `GET /api/{affiliateId}` — affiliate identity (`id`, `name`), for FE display
   (e.g. header branding).
 - `GET /api/{affiliateId}/events` — cursor-paginated list, filters: `q` (name
-  search), `category`, `date_from`/`date_to`.
+  search), `category` (comma-separated category ids, OR-matched), `date_from`/`date_to`.
 - `GET /api/{affiliateId}/events/{eventId}` — detail, incl. areas/prices.
 - `GET /api/{affiliateId}/categories` — static list, only categories with ≥1
   published event, Redis-cached.
