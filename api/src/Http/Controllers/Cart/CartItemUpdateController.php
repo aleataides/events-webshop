@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Cart;
 
+use App\Entities\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cart\CartItemUpdateRequest;
 use App\Services\CartService;
@@ -17,12 +18,12 @@ final class CartItemUpdateController extends Controller
     {
     }
 
-    public function __invoke(CartItemUpdateRequest $request): Response
+    public function __invoke(CartItemUpdateRequest $request, Affiliate $affiliate): Response
     {
         $body = $request->validated();
 
         $data = $this->cartService->updateItemQty(
-            $this->affiliate($request->request()),
+            $affiliate,
             $this->cartId($request->request()),
             $body['itemId'],
             $body['qty'],

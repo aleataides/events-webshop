@@ -13,27 +13,31 @@ where it simplifies code, e.g. `new Foo()->bar()` directly (no wrapping
 parens needed for a `new` expression's methods since 8.4).
 
 **Controllers** extend `App\Http\Controllers\Controller` and are invoked as
-`__invoke(Request $request): Response` — no `$response`/route-`$args`
-params to thread through, matching Symfony's `AbstractController` shape.
-`ControllerInvocationStrategy` (Slim's `InvocationStrategyInterface`,
-registered in `bootstrap/app.php`) copies route placeholders into request
-attributes and drops Slim's passed-in `$response`; the base class's
-`$this->json($data, $status = 200)` returns an `App\Http\JsonResponse`
-instead, and `$this->affiliate($request)` reads the `AffiliateMiddleware`-set
-attribute (throws `MissingAffiliateContextException` if missing).
+`__invoke(...$params): Response` — no Slim `$response` to thread through;
+the base class's `$this->json($data, $status = 200)` returns an
+`App\Http\JsonResponse` instead. `App\Http\Routing\ControllerInvocationStrategy`
+(Slim's `InvocationStrategyInterface`, registered in `bootstrap/app.php`)
+copies route placeholders into request attributes, then resolves each
+`__invoke` parameter by its type-hint — order doesn't matter:
+
+- `ServerRequestInterface` (or a `FormRequest` subclass, see below) → the
+  request.
+- `App\Entities\Affiliate` → the `AffiliateMiddleware`-set `affiliate`
+  attribute (throws `MissingAffiliateContextException` if missing).
+
+Any other type-hint is a `LogicException` at request time — there's no
+fallback/DI container lookup here, only these two resolvers.
 
 **Request validation** stays out of controllers via `App\Http\Requests\FormRequest`
 (Laravel-style): a controller that needs a validated body type-hints a
 concrete `FormRequest` subclass instead of `Request` — e.g.
-`__invoke(CartItemStoreRequest $request)`. `ControllerInvocationStrategy`
-detects that type-hint via reflection and builds the instance through
-`FormRequest::fromHttpRequest()` instead of passing the raw PSR-7 request.
-Subclasses declare `rules()` (`field => 'string'|'int'`); the base class
-checks presence/type against `data()` (defaults to the parsed body, override
-to fold in route attributes) and throws `InvalidRequestException` on
-mismatch. `$request->validated()` returns the checked fields;
-`$request->request()` gets back the wrapped PSR-7 request for
-`$this->affiliate(...)`/`$this->cartId(...)`. Live in
+`__invoke(CartItemStoreRequest $request, Affiliate $affiliate)`. Subclasses
+declare `rules()` (`field => 'string'|'int'`); the base class checks
+presence/type against `data()` (defaults to the parsed body, override to
+fold in route attributes) and throws `InvalidRequestException` on mismatch.
+`$request->validated()` returns the checked fields; `$request->request()`
+gets back the wrapped PSR-7 request for `$this->cartId(...)` (`Affiliate`
+comes from the injected param instead, not this). Live in
 `api/src/Http/Requests/`, mirroring `Controllers/`'s subfolders.
 
 **Comments**: classes, methods, properties, and constants use a multi-line
@@ -47,7 +51,8 @@ already says.
 ## Folder structure (layer-first, PSR-4)
 
 ```
-api/src/Http/          — Controllers, PSR-15 middleware, JsonResponse: the request/response layer.
+api/src/Http/          — Controllers, Requests, Routing, PSR-15 middleware, JsonResponse: the
+                          request/response layer.
 api/src/Services/      — business logic between controllers and repositories.
 api/src/Repositories/  — Doctrine custom repos, wired via #[ORM\Entity(repositoryClass:...)].
 api/src/Entities/      — Doctrine entities + shared traits (HasUuidId, Timestampable, HasFactory).
