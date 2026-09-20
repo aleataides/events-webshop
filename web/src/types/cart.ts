@@ -1,3 +1,5 @@
+import type { Venue } from '@/types/event'
+
 export interface CartItem {
   id: string
   price: {
@@ -8,6 +10,20 @@ export interface CartItem {
   }
   qty: number
   subtotal: string
+  area: {
+    id: string
+    name: string
+  }
+  event: {
+    id: string
+    title: string
+    start: string
+    image: {
+      id: string
+      copyright: string
+    }
+    venue: Venue
+  }
 }
 
 export interface Cart {
