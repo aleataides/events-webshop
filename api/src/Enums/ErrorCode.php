@@ -17,6 +17,8 @@ enum ErrorCode: string
     case InsufficientStock = 'insufficient_stock';
     case InternalError = 'internal_error';
     case InvalidRequest = 'invalid_request';
+    case MethodNotAllowed = 'method_not_allowed';
+    case NotFound = 'not_found';
     case PriceNotFound = 'price_not_found';
     case TicketReservationNotFound = 'cart_item_not_found';
 }
