@@ -20,7 +20,13 @@ const emit = defineEmits<{
   select: []
 }>()
 
+const isSoldOut = computed(() => props.event.areas.every((area) => area.available <= 0))
+
 const ctaLabel = computed(() => {
+  if (isSoldOut.value) {
+    return 'Sold out'
+  }
+
   if (props.totalQty === 0) {
     return 'Select tickets'
   }
