@@ -6,8 +6,9 @@ namespace App\Resources;
 
 use App\Entities\Price;
 use App\Shared\MoneyConvertible;
+use JsonSerializable;
 
-final class PriceResource
+final class PriceResource implements JsonSerializable
 {
     use MoneyConvertible;
 
@@ -18,7 +19,7 @@ final class PriceResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->price->getId()->toString(),

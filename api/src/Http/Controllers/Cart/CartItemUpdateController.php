@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Cart;
 use App\Entities\Affiliate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cart\CartItemUpdateRequest;
+use App\Resources\CartResource;
 use App\Services\CartService;
 use Psr\Http\Message\ResponseInterface as Response;
 
@@ -22,13 +23,13 @@ final class CartItemUpdateController extends Controller
     {
         $body = $request->validated();
 
-        $data = $this->cartService->updateItemQty(
+        $cart = $this->cartService->updateItemQty(
             $affiliate,
             $this->cartId($request->request()),
             $body['itemId'],
             $body['qty'],
         );
 
-        return $this->json(['data' => $data]);
+        return $this->json(['data' => new CartResource($cart)]);
     }
 }

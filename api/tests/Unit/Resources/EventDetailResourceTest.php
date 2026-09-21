@@ -32,7 +32,7 @@ final class EventDetailResourceTest extends TestCase
         $area = $this->areaFactory->make(['event' => $event, 'name' => 'Innenraum', 'capacity' => 50]);
         $this->priceFactory->make(['area' => $area, 'name' => 'Normalpreis', 'basePriceCents' => 2000]);
 
-        $result = new EventDetailResource($event)->toArray();
+        $result = json_decode(json_encode(new EventDetailResource($event), JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertSame('<p>Full description.</p>', $result['description']);
         self::assertSame('VVK ab 10 Euro', $result['priceInfo']);

@@ -28,7 +28,7 @@ return static function (ContainerInterface $container): App {
 
     // Must sit inside RequestId/Cors/RateLimit, not just before them —
     // those decorate every response, but only see one if it isn't a thrown exception.
-    $errorMiddleware = $app->addErrorMiddleware(false, false, false);
+    $errorMiddleware = $app->addErrorMiddleware(displayErrorDetails: false, logErrors: false, logErrorDetails: false);
     $errorMiddleware->setDefaultErrorHandler($container->get(ErrorHandler::class));
 
     $app->add($container->get(RateLimitMiddleware::class));

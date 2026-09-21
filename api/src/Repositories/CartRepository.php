@@ -18,9 +18,12 @@ final class CartRepository extends EntityRepository
     public function findOneForAffiliate(Affiliate $affiliate, UuidInterface $cartId): ?Cart
     {
         return $this->createQueryBuilder('c')
-            ->addSelect('reservations', 'price')
+            ->addSelect('reservations', 'price', 'area', 'event', 'venue')
             ->leftJoin('c.reservations', 'reservations')
             ->leftJoin('reservations.price', 'price')
+            ->leftJoin('price.area', 'area')
+            ->leftJoin('area.event', 'event')
+            ->leftJoin('event.venue', 'venue')
             ->andWhere('c.id = :id')
             ->andWhere('IDENTITY(c.affiliate) = :affiliateId')
             ->setParameter('id', $cartId, UuidBinaryType::NAME)

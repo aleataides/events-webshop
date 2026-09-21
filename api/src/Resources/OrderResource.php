@@ -8,8 +8,9 @@ use App\Entities\Order;
 use App\Entities\OrderItem;
 use App\Shared\MoneyConvertible;
 use DateTimeInterface;
+use JsonSerializable;
 
-final class OrderResource
+final class OrderResource implements JsonSerializable
 {
     use MoneyConvertible;
 
@@ -20,7 +21,7 @@ final class OrderResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         $items = $this->order->getItems()->toArray();
         $totalCents = array_sum(array_map(
@@ -32,7 +33,7 @@ final class OrderResource
             'id' => $this->order->getId()->toString(),
             'createdAt' => $this->order->getCreatedAt()->format(DateTimeInterface::ATOM),
             'items' => array_map(
-                static fn (OrderItem $item) => new OrderItemResource($item)->toArray(),
+                static fn (OrderItem $item) => new OrderItemResource($item),
                 $items,
             ),
             'total' => $this->toMajorUnits((int) $totalCents),

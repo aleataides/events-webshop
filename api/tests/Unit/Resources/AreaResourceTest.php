@@ -26,7 +26,7 @@ final class AreaResourceTest extends TestCase
         $event = $this->eventFactory->make(['venue' => $this->venueFactory->make(), 'affiliate' => $this->affiliateFactory->make()]);
         $area = $this->areaFactory->make(['event' => $event, 'capacity' => 10, 'reservedQty' => 6, 'soldQty' => 6]);
 
-        $result = new AreaResource($area)->toArray();
+        $result = new AreaResource($area)->jsonSerialize();
 
         self::assertSame(0, $result['available']);
     }
@@ -38,7 +38,7 @@ final class AreaResourceTest extends TestCase
         $event = $this->eventFactory->make(['venue' => $this->venueFactory->make(), 'affiliate' => $this->affiliateFactory->make()]);
         $area = $this->areaFactory->make(['event' => $event, 'capacity' => 10, 'reservedQty' => 2, 'soldQty' => 3]);
 
-        $result = new AreaResource($area)->toArray();
+        $result = new AreaResource($area)->jsonSerialize();
 
         self::assertSame(5, $result['available']);
     }

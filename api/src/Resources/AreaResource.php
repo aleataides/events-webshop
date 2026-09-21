@@ -6,8 +6,9 @@ namespace App\Resources;
 
 use App\Entities\Area;
 use App\Entities\Price;
+use JsonSerializable;
 
-final class AreaResource
+final class AreaResource implements JsonSerializable
 {
     public function __construct(private readonly Area $area)
     {
@@ -16,7 +17,7 @@ final class AreaResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->area->getId()->toString(),
@@ -24,7 +25,7 @@ final class AreaResource
             'capacity' => $this->area->getCapacity(),
             'available' => max(0, $this->area->getAvailable()),
             'prices' => array_map(
-                static fn (Price $price) => new PriceResource($price)->toArray(),
+                static fn (Price $price) => new PriceResource($price),
                 $this->area->getPrices()->toArray(),
             ),
         ];

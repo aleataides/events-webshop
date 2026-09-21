@@ -8,8 +8,9 @@ use App\Entities\Category;
 use App\Entities\Event;
 use App\Shared\MoneyConvertible;
 use DateTimeInterface;
+use JsonSerializable;
 
-final class EventListResource
+final class EventListResource implements JsonSerializable
 {
     use MoneyConvertible;
 
@@ -20,7 +21,7 @@ final class EventListResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         [$minCents, $maxCents, $soldOut, $currency] = $this->priceStats();
 
@@ -43,9 +44,9 @@ final class EventListResource
             'minPrice' => $minCents !== null ? $this->toMajorUnits($minCents) : null,
             'maxPrice' => $maxCents !== null ? $this->toMajorUnits($maxCents) : null,
             'currency' => $currency,
-            'venue' => new VenueResource($this->event->getVenue())->toArray(),
+            'venue' => new VenueResource($this->event->getVenue()),
             'categories' => array_map(
-                static fn (Category $category) => new CategoryResource($category)->toArray(),
+                static fn (Category $category) => new CategoryResource($category),
                 $this->event->getCategories()->toArray(),
             ),
         ];

@@ -60,7 +60,7 @@ final class EventService
         );
 
         $items = array_map(
-            static fn (Event $event) => new EventListResource($event)->toArray(),
+            static fn (Event $event) => new EventListResource($event)->jsonSerialize(),
             $found['items'],
         );
         $lastEvent = $found['items'] === [] ? null : $found['items'][array_key_last($found['items'])];
@@ -96,7 +96,7 @@ final class EventService
             throw new EventNotFoundException($eventId->toString());
         }
 
-        $result = new EventDetailResource($event)->toArray();
+        $result = new EventDetailResource($event)->jsonSerialize();
 
         $this->redis->setex($cacheKey, self::DETAIL_CACHE_TTL_SECONDS, json_encode($result, JSON_THROW_ON_ERROR));
 

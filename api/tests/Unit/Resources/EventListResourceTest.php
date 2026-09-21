@@ -32,7 +32,7 @@ final class EventListResourceTest extends TestCase
         $area = $this->areaFactory->make(['event' => $event, 'capacity' => 10, 'reservedQty' => 4, 'soldQty' => 6]);
         $this->priceFactory->make(['area' => $area, 'basePriceCents' => 2000]);
 
-        $result = new EventListResource($event)->toArray();
+        $result = new EventListResource($event)->jsonSerialize();
 
         self::assertTrue($result['soldout']);
     }
@@ -45,7 +45,7 @@ final class EventListResourceTest extends TestCase
         $area = $this->areaFactory->make(['event' => $event, 'capacity' => 10, 'reservedQty' => 2, 'soldQty' => 2]);
         $this->priceFactory->make(['area' => $area, 'basePriceCents' => 2000]);
 
-        $result = new EventListResource($event)->toArray();
+        $result = new EventListResource($event)->jsonSerialize();
 
         self::assertFalse($result['soldout']);
     }
@@ -62,7 +62,7 @@ final class EventListResourceTest extends TestCase
         $pricyArea = $this->areaFactory->make(['event' => $event, 'capacity' => 10]);
         $this->priceFactory->make(['area' => $pricyArea, 'basePriceCents' => 5000, 'ticketFeeCents' => 0, 'outletFeeCents' => 0]);
 
-        $result = new EventListResource($event)->toArray();
+        $result = new EventListResource($event)->jsonSerialize();
 
         self::assertSame('10.00', $result['minPrice']);
         self::assertSame('50.00', $result['maxPrice']);
@@ -74,7 +74,7 @@ final class EventListResourceTest extends TestCase
     {
         $event = $this->eventFactory->make(['venue' => $this->venue, 'affiliate' => $this->affiliate]);
 
-        $result = new EventListResource($event)->toArray();
+        $result = new EventListResource($event)->jsonSerialize();
 
         self::assertNull($result['minPrice']);
         self::assertNull($result['maxPrice']);

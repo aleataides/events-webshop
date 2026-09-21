@@ -8,8 +8,9 @@ use App\Entities\Cart;
 use App\Entities\TicketReservation;
 use App\Shared\MoneyConvertible;
 use DateTimeInterface;
+use JsonSerializable;
 
-final class CartResource
+final class CartResource implements JsonSerializable
 {
     use MoneyConvertible;
 
@@ -20,7 +21,7 @@ final class CartResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         $items = $this->cart->getReservations()->toArray();
         $totalCents = array_sum(array_map(
@@ -32,7 +33,7 @@ final class CartResource
             'id' => $this->cart->getId()->toString(),
             'expiresAt' => $this->cart->getExpiresAt()->format(DateTimeInterface::ATOM),
             'items' => array_map(
-                static fn (TicketReservation $reservation) => new TicketReservationResource($reservation)->toArray(),
+                static fn (TicketReservation $reservation) => new TicketReservationResource($reservation),
                 $items,
             ),
             'total' => $this->toMajorUnits((int) $totalCents),

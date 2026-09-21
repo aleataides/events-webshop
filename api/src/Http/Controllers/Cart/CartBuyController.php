@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Cart;
 
 use App\Entities\Affiliate;
 use App\Http\Controllers\Controller;
+use App\Resources\OrderResource;
 use App\Services\CartService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -20,8 +21,8 @@ final class CartBuyController extends Controller
 
     public function __invoke(Request $request, Affiliate $affiliate): Response
     {
-        $data = $this->cartService->buy($affiliate, $this->cartId($request));
+        $order = $this->cartService->buy($affiliate, $this->cartId($request));
 
-        return $this->json(['data' => $data], 201);
+        return $this->json(['data' => new OrderResource($order)], 201);
     }
 }
