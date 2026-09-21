@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 
 final class CartEmptyException extends DomainException
@@ -18,8 +19,8 @@ final class CartEmptyException extends DomainException
         return HttpStatus::BadRequest;
     }
 
-    public function getErrorCode(): string
+    public function getErrorCode(): ErrorCode
     {
-        return 'cart_empty';
+        return ErrorCode::CartEmpty;
     }
 }

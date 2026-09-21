@@ -8,6 +8,7 @@ import { getApiErrorCode } from '@/lib/apiError'
 import { addWithExpiryRetry } from '@/lib/cartExpiry'
 import { formatEventDateTime } from '@/lib/formatDate'
 import { useCartStore } from '@/stores/cart'
+import { ErrorCode } from '@/types/errorCode'
 import TicketSelector from '@/views/EventDetail/components/TicketSelector.vue'
 import { computed, ref, watch } from 'vue'
 
@@ -71,7 +72,7 @@ async function applyChanges(): Promise<void> {
   } catch (error) {
     // Expired mid-edit — a stale reservation can't be updated/removed, so
     // just drop it locally; CartPage's own expiry check picks it up.
-    if (getApiErrorCode(error) !== 'cart_expired') {
+    if (getApiErrorCode(error) !== ErrorCode.CartExpired) {
       throw error
     }
 

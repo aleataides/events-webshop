@@ -1,5 +1,6 @@
 import { getApiErrorCode } from '@/lib/apiError'
 import { useCartStore } from '@/stores/cart'
+import { ErrorCode } from '@/types/errorCode'
 
 /**
  * Retries a cart-adding call once after clearing a stale cart id — safe only
@@ -9,7 +10,7 @@ export async function addWithExpiryRetry<T>(action: () => Promise<T>): Promise<T
   try {
     return await action()
   } catch (error) {
-    if (getApiErrorCode(error) !== 'cart_expired') {
+    if (getApiErrorCode(error) !== ErrorCode.CartExpired) {
       throw error
     }
 

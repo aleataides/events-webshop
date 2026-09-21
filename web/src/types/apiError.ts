@@ -1,6 +1,8 @@
+import type { ErrorCode } from './errorCode'
+
 export interface ApiErrorResponse {
   error: {
-    code: string
+    code: ErrorCode
     message: string
     request_id: string
   }

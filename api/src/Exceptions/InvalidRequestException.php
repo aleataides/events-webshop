@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 
 final class InvalidRequestException extends DomainException
@@ -13,8 +14,8 @@ final class InvalidRequestException extends DomainException
         return HttpStatus::BadRequest;
     }
 
-    public function getErrorCode(): string
+    public function getErrorCode(): ErrorCode
     {
-        return 'invalid_request';
+        return ErrorCode::InvalidRequest;
     }
 }
