@@ -27,4 +27,21 @@ final class AreaRepository extends EntityRepository
 
         return $affected > 0;
     }
+
+    /**
+     * Atomic conditional UPDATE finalizing a held reservation into a sale —
+     * called inside CartService::transactional. Guards against a duplicate
+     * concurrent Buy re-converting the same reservation twice, see
+     * docs/shared/business-rules.md#buy--checkout.
+     */
+    public function trySell(UuidInterface $areaId, int $qty): bool
+    {
+        $affected = $this->getEntityManager()->getConnection()->executeStatement(
+            'UPDATE area SET reserved_qty = reserved_qty - :qty, sold_qty = sold_qty + :qty '
+                . 'WHERE id = :id AND reserved_qty >= :qty',
+            ['qty' => $qty, 'id' => $areaId->getBytes()],
+        );
+
+        return $affected > 0;
+    }
 }
