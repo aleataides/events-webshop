@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Cart;
 use App\Entities\Affiliate;
 use App\Exceptions\InvalidRequestException;
 use App\Http\Controllers\Controller;
+use App\Resources\CartResource;
 use App\Services\CartService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -26,8 +27,8 @@ final class CartItemDestroyController extends Controller
             throw new InvalidRequestException('"itemId" is required.');
         }
 
-        $data = $this->cartService->removeItem($affiliate, $this->cartId($request), $itemId);
+        $cart = $this->cartService->removeItem($affiliate, $this->cartId($request), $itemId);
 
-        return $this->json(['data' => $data]);
+        return $this->json(['data' => new CartResource($cart)]);
     }
 }

@@ -36,7 +36,7 @@ final class CategoryService
 
         $categories = $this->categoryRepository->findPublishedForAffiliate($affiliate);
         $result = array_map(
-            static fn ($category) => new CategoryResource($category)->toArray(),
+            static fn ($category) => new CategoryResource($category)->jsonSerialize(),
             $categories,
         );
 

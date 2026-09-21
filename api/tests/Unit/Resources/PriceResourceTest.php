@@ -32,7 +32,7 @@ final class PriceResourceTest extends TestCase
             'outletFeeCents' => 0,
         ]);
 
-        $result = new PriceResource($price)->toArray();
+        $result = new PriceResource($price)->jsonSerialize();
 
         self::assertSame('22.00', $result['basePrice']);
         self::assertSame('1.76', $result['ticketFee']);

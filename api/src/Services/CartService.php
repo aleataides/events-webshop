@@ -19,8 +19,6 @@ use App\Exceptions\TicketReservationNotFoundException;
 use App\Repositories\AreaRepository;
 use App\Repositories\CartRepository;
 use App\Repositories\PriceRepository;
-use App\Resources\CartResource;
-use App\Resources\OrderResource;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,23 +39,17 @@ final class CartService
     /**
      * Null means "no cart" — an unknown/invalid/missing id is never an
      * error on read, see docs/shared/business-rules.md#cart-identity.
-     *
-     * @return array<string, mixed>|null
      */
-    public function getCart(Affiliate $affiliate, ?string $cartIdRaw): ?array
+    public function getCart(Affiliate $affiliate, ?string $cartIdRaw): ?Cart
     {
-        $cart = $this->findValidCart($affiliate, $cartIdRaw);
-
-        return $cart instanceof Cart ? new CartResource($cart)->toArray() : null;
+        return $this->findValidCart($affiliate, $cartIdRaw);
     }
 
     /**
      * Lazily creates a cart if none was supplied and always renews its
      * expiry clock — see docs/shared/business-rules.md#cart-identity/#cart-expiry.
-     *
-     * @return array<string, mixed>
      */
-    public function addItem(Affiliate $affiliate, ?string $cartIdRaw, string $priceIdRaw, int $qty): array
+    public function addItem(Affiliate $affiliate, ?string $cartIdRaw, string $priceIdRaw, int $qty): Cart
     {
         if ($qty < 1) {
             throw new InvalidRequestException('"qty" must be at least 1.');
@@ -81,16 +73,14 @@ final class CartService
             $cart->renewExpiry($now);
         });
 
-        return new CartResource($cart)->toArray();
+        return $cart;
     }
 
     /**
      * Renews the cart's expiry clock on a qty increase, not a decrease —
      * see docs/shared/business-rules.md#cart-expiry.
-     *
-     * @return array<string, mixed>
      */
-    public function updateItemQty(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw, int $newQty): array
+    public function updateItemQty(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw, int $newQty): Cart
     {
         if ($newQty < 0) {
             throw new InvalidRequestException('"qty" must be zero or greater.');
@@ -112,16 +102,14 @@ final class CartService
             }
         });
 
-        return new CartResource($cart)->toArray();
+        return $cart;
     }
 
     /**
      * Does not touch the cart's expiry clock — see
      * docs/shared/business-rules.md#cart-expiry.
-     *
-     * @return array<string, mixed>
      */
-    public function removeItem(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw): array
+    public function removeItem(Affiliate $affiliate, ?string $cartIdRaw, string $reservationIdRaw): Cart
     {
         $reservation = $this->findReservationOrFail($affiliate, $cartIdRaw, $reservationIdRaw);
         $cart = $reservation->getCart();
@@ -129,17 +117,15 @@ final class CartService
 
         $this->entityManager->flush();
 
-        return new CartResource($cart)->toArray();
+        return $cart;
     }
 
     /**
      * Atomically converts every reservation into a sale — see
      * docs/shared/business-rules.md#buy--checkout. No payment gateway; this
      * response IS the confirmation, there's no separate GET /orders/{id}.
-     *
-     * @return array<string, mixed>
      */
-    public function buy(Affiliate $affiliate, ?string $cartIdRaw): array
+    public function buy(Affiliate $affiliate, ?string $cartIdRaw): Order
     {
         $cart = $this->findValidCart($affiliate, $cartIdRaw);
         if (!$cart instanceof Cart || $cart->getReservations()->isEmpty()) {
@@ -157,7 +143,7 @@ final class CartService
         $this->entityManager->remove($cart);
         $this->entityManager->flush();
 
-        return new OrderResource($order)->toArray();
+        return $order;
     }
 
     /**

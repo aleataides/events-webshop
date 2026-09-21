@@ -6,8 +6,9 @@ namespace App\Resources;
 
 use App\Entities\OrderItem;
 use App\Shared\MoneyConvertible;
+use JsonSerializable;
 
-final class OrderItemResource
+final class OrderItemResource implements JsonSerializable
 {
     use MoneyConvertible;
 
@@ -18,11 +19,11 @@ final class OrderItemResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->item->getId()->toString(),
-            'price' => new PriceResource($this->item->getPrice())->toArray(),
+            'price' => new PriceResource($this->item->getPrice()),
             'qty' => $this->item->getQty(),
             'subtotal' => $this->toMajorUnits($this->item->getPrice()->getValueCents() * $this->item->getQty()),
         ];

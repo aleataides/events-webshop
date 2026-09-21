@@ -6,8 +6,9 @@ namespace App\Resources;
 
 use App\Entities\Area;
 use App\Entities\Event;
+use JsonSerializable;
 
-final class EventDetailResource
+final class EventDetailResource implements JsonSerializable
 {
     public function __construct(private readonly Event $event)
     {
@@ -16,13 +17,13 @@ final class EventDetailResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
-        return new EventListResource($this->event)->toArray() + [
+        return new EventListResource($this->event)->jsonSerialize() + [
             'description' => $this->event->getDescription(),
             'priceInfo' => $this->event->getPriceInfo(),
             'areas' => array_map(
-                static fn (Area $area) => new AreaResource($area)->toArray(),
+                static fn (Area $area) => new AreaResource($area),
                 $this->event->getAreas()->toArray(),
             ),
         ];

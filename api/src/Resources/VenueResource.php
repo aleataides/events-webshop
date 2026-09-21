@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Resources;
 
 use App\Entities\Venue;
+use JsonSerializable;
 
-final class VenueResource
+final class VenueResource implements JsonSerializable
 {
     public function __construct(private readonly Venue $venue)
     {
@@ -15,7 +16,7 @@ final class VenueResource
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function jsonSerialize(): array
     {
         return [
             'id' => $this->venue->getId()->toString(),
