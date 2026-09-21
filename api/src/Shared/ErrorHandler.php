@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 use App\Exceptions\DomainException;
 use App\Http\JsonResponse;
@@ -35,17 +36,17 @@ final class ErrorHandler
             $status = $exception->getStatus();
             $code = $exception->getErrorCode();
             $message = $exception->getMessage();
-            $this->logger->warning($exception->getMessage(), ['code' => $code]);
+            $this->logger->warning($exception->getMessage(), ['code' => $code->value]);
         } else {
             $status = HttpStatus::InternalServerError;
-            $code = 'internal_error';
+            $code = ErrorCode::InternalError;
             $message = 'An unexpected error occurred.';
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
         }
 
         return new JsonResponse([
             'error' => [
-                'code' => $code,
+                'code' => $code->value,
                 'message' => $message,
                 'request_id' => $this->requestContext->getRequestId(),
             ],

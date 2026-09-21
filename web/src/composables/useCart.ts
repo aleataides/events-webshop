@@ -4,6 +4,7 @@ import { buyCart, getCart, removeCartItem, updateCartItem } from '@/api/cart'
 import { useCountdown } from '@/composables/useCountdown'
 import { getApiErrorCode } from '@/lib/apiError'
 import { useCartStore } from '@/stores/cart'
+import { ErrorCode } from '@/types/errorCode'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 
@@ -33,7 +34,7 @@ export function useCart(affiliateId: string) {
     try {
       await action()
     } catch (error) {
-      if (getApiErrorCode(error) !== 'cart_expired') {
+      if (getApiErrorCode(error) !== ErrorCode.CartExpired) {
         throw error
       }
 

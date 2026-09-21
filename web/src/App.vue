@@ -7,6 +7,7 @@ import { getStoredCartId } from '@/lib/cartStorage'
 import { RouteName } from '@/router/routeNames'
 import { useAffiliateStore } from '@/stores/affiliate'
 import { useCartStore } from '@/stores/cart'
+import { ErrorCode } from '@/types/errorCode'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -32,7 +33,7 @@ onMounted(async () => {
   } catch (error) {
     // A stale/expired cart id must not linger forever — see the 410 loop
     // this used to cause once every retry kept reusing the dead id.
-    if (getApiErrorCode(error) !== 'cart_expired') {
+    if (getApiErrorCode(error) !== ErrorCode.CartExpired) {
       throw error
     }
 

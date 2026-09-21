@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 
 final class CartExpiredException extends DomainException
@@ -18,8 +19,8 @@ final class CartExpiredException extends DomainException
         return HttpStatus::Gone;
     }
 
-    public function getErrorCode(): string
+    public function getErrorCode(): ErrorCode
     {
-        return 'cart_expired';
+        return ErrorCode::CartExpired;
     }
 }

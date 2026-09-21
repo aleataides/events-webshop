@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 
 final class EventNotFoundException extends DomainException
@@ -18,8 +19,8 @@ final class EventNotFoundException extends DomainException
         return HttpStatus::NotFound;
     }
 
-    public function getErrorCode(): string
+    public function getErrorCode(): ErrorCode
     {
-        return 'event_not_found';
+        return ErrorCode::EventNotFound;
     }
 }

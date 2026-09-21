@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Enums\ErrorCode;
 use App\Enums\HttpStatus;
 use RuntimeException;
 
@@ -15,5 +16,5 @@ abstract class DomainException extends RuntimeException
 {
     abstract public function getStatus(): HttpStatus;
 
-    abstract public function getErrorCode(): string;
+    abstract public function getErrorCode(): ErrorCode;
 }
