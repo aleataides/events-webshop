@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+cd "$(dirname "$0")/.."
+
+[ -f .env ] || cp .env.example .env
+
+docker compose up -d
+docker compose exec api bin/console app:seed --no-faker
+
+AFFILIATE_ID=$(docker compose exec -T mariadb sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" event_webshop -N -e "
+  SELECT LOWER(CONCAT_WS('"'"'-'"'"',
+    HEX(SUBSTR(id,1,4)), HEX(SUBSTR(id,5,2)), HEX(SUBSTR(id,7,2)),
+    HEX(SUBSTR(id,9,2)), HEX(SUBSTR(id,11,6))
+  ))
+  FROM affiliate WHERE name = '"'"'ATELIER THEATER GmbH'"'"' LIMIT 1;"')
+
+echo
+echo "Web:            http://localhost:3000"
+echo "API:            http://localhost:8080"
+echo "Affiliate home: http://localhost:3000/$AFFILIATE_ID/events"
