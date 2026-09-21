@@ -35,6 +35,12 @@ decrement `reserved_qty` by that reservation's qty in the same transaction
 that deletes/shrinks the reservation row — otherwise that stock stays
 permanently (and incorrectly) marked unavailable.
 
+The UPDATE runs inside the same DB transaction as the reservation-row write
+(`CartService::transactional`), so a flush failure can't leave `reserved_qty`
+incremented with no reservation to match it. That holds the row lock for the
+duration of the flush, not just the UPDATE — acceptable at this scale, revisit
+if cart writes get slow enough for that to matter.
+
 ## Cart expiry
 
 - 15 minutes (`CART_EXPIRY_MINUTES` env var, default 15) — lower it locally to

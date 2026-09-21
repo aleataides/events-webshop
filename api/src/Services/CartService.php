@@ -71,14 +71,15 @@ final class CartService
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $cart = $this->findValidCart($affiliate, $cartIdRaw) ?? Cart::startNew(Uuid::uuid7(), $affiliate, $now);
 
-        if (!$this->areaRepository->tryReserve($price->getArea()->getId(), $qty)) {
-            throw new InsufficientStockException($priceIdRaw);
-        }
+        $this->transactional(function () use ($cart, $price, $priceIdRaw, $qty, $now): void {
+            if (!$this->areaRepository->tryReserve($price->getArea()->getId(), $qty)) {
+                throw new InsufficientStockException($priceIdRaw);
+            }
 
-        new TicketReservation(Uuid::uuid7(), $cart, $price, $qty);
-        $this->entityManager->persist($cart);
-        $cart->renewExpiry($now);
-        $this->entityManager->flush();
+            new TicketReservation(Uuid::uuid7(), $cart, $price, $qty);
+            $this->entityManager->persist($cart);
+            $cart->renewExpiry($now);
+        });
 
         return new CartResource($cart)->toArray();
     }
@@ -99,17 +100,17 @@ final class CartService
         $cart = $reservation->getCart();
         $isIncrease = $newQty > $reservation->getQty();
 
-        if ($newQty === 0) {
-            $this->releaseReservation($reservation);
-        } else {
-            $this->adjustReservationQty($reservation, $newQty);
-        }
+        $this->transactional(function () use ($reservation, $cart, $newQty, $isIncrease): void {
+            if ($newQty === 0) {
+                $this->releaseReservation($reservation);
+            } else {
+                $this->adjustReservationQty($reservation, $newQty);
+            }
 
-        if ($isIncrease) {
-            $cart->renewExpiry(new DateTimeImmutable('now', new DateTimeZone('UTC')));
-        }
-
-        $this->entityManager->flush();
+            if ($isIncrease) {
+                $cart->renewExpiry(new DateTimeImmutable('now', new DateTimeZone('UTC')));
+            }
+        });
 
         return new CartResource($cart)->toArray();
     }
@@ -157,6 +158,18 @@ final class CartService
         $this->entityManager->flush();
 
         return new OrderResource($order)->toArray();
+    }
+
+    /**
+     * Runs raw-SQL area writes and the ORM flush in one DB transaction —
+     * unlike EntityManager::wrapInTransaction(), never closes the EntityManager.
+     */
+    private function transactional(callable $fn): void
+    {
+        $this->entityManager->getConnection()->transactional(function () use ($fn): void {
+            $fn();
+            $this->entityManager->flush();
+        });
     }
 
     private function adjustReservationQty(TicketReservation $reservation, int $newQty): void

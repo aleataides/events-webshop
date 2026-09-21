@@ -14,8 +14,8 @@ use Ramsey\Uuid\UuidInterface;
 final class AreaRepository extends EntityRepository
 {
     /**
-     * Atomic conditional UPDATE, no row locks — see
-     * docs/shared/business-rules.md#stock-locking.
+     * Atomic conditional UPDATE, called inside CartService::transactional —
+     * see docs/shared/business-rules.md#stock-locking.
      */
     public function tryReserve(UuidInterface $areaId, int $qty): bool
     {
