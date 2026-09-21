@@ -28,15 +28,18 @@ final class SeedCommand extends Command
         $this
             ->addOption('affiliates', null, InputOption::VALUE_REQUIRED, 'Number of Faker affiliates, in addition to the pinned one', 1)
             ->addOption('venues', null, InputOption::VALUE_REQUIRED, 'Number of venues', 5)
-            ->addOption('events', null, InputOption::VALUE_REQUIRED, 'Number of events', 30);
+            ->addOption('events', null, InputOption::VALUE_REQUIRED, 'Number of events', 30)
+            ->addOption('no-faker', null, InputOption::VALUE_NONE, 'Only the pinned affiliate + its fixed events, no Faker data');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $noFaker = (bool) $input->getOption('no-faker');
+
         $counts = $this->demoDataSeeder->seed(
-            (int) $input->getOption('affiliates'),
-            (int) $input->getOption('venues'),
-            (int) $input->getOption('events'),
+            $noFaker ? 0 : (int) $input->getOption('affiliates'),
+            $noFaker ? 0 : (int) $input->getOption('venues'),
+            $noFaker ? 0 : (int) $input->getOption('events'),
         );
 
         new SymfonyStyle($input, $output)->success(sprintf(
