@@ -3,8 +3,8 @@
 ## Layering
 
 `controller > service > repository`. Business rules never in controllers.
-Resource classes (Laravel-like) are the only entity→JSON boundary — controllers
-never serialize entities directly. Always return JSON. Max **4 constructor
+Resource classes (Laravel-like) are the only entity→JSON boundary — nothing
+else builds a response array/object by hand. Always return JSON. Max **4 constructor
 parameters** — beyond that, extract a coordinating/facade object rather than
 keep adding params. That facade itself is the accepted exception to the
 limit (bundling N related collaborators is its whole job) — don't chase the
@@ -27,6 +27,23 @@ copies route placeholders into request attributes, then resolves each
 
 Any other type-hint is a `LogicException` at request time — there's no
 fallback/DI container lookup here, only these two resolvers.
+
+**Resources** (`App\Resources\*`) `implement JsonSerializable` — `jsonSerialize()`,
+not `toArray()`. `JsonResponse`'s `json_encode()` calls it automatically,
+recursively, so a Resource embeds a nested Resource as an object
+(`new PriceResource($price)`) rather than calling `->jsonSerialize()` on it
+itself. Who constructs the top-level Resource depends on whether the
+endpoint is cached:
+
+- **Live/uncached endpoints** (Cart, Order, Affiliate — cart contents and
+  stock are never cached, staleness there is a correctness bug, not a UX
+  nicety): the Service returns the entity (`Cart`, `Order`, ...) and the
+  Controller constructs the Resource — `new CartResource($cart)`.
+- **Cached endpoints** (Event, Category — read-only catalog data, Redis,
+  short TTL, see `EventService`/`CategoryService`): the Service builds the
+  Resource itself and calls `->jsonSerialize()` once to get the plain array
+  it caches (`json_decode($cached, true)` on a hit has no entity to
+  hydrate a Resource from). The Controller just relays that array.
 
 **Request validation** stays out of controllers via `App\Http\Requests\FormRequest`
 (Laravel-style): a controller that needs a validated request type-hints a
@@ -65,7 +82,8 @@ api/src/Http/          — Controllers, Requests, Routing, PSR-15 middleware, Js
 api/src/Services/      — business logic between controllers and repositories.
 api/src/Repositories/  — Doctrine custom repos, wired via #[ORM\Entity(repositoryClass:...)].
 api/src/Entities/      — Doctrine entities + shared traits (HasUuidId, Timestampable, HasFactory).
-api/src/Resources/     — the only classes allowed to serialize an entity to JSON.
+api/src/Resources/     — the only classes allowed to serialize an entity to JSON
+                          (JsonSerializable, see Layering above).
 api/src/Factories/     — model factories (definition/make/create/createMany), used by Seeders,
                           FixtureEventCommand, and tests alike.
 api/src/Seeders/       — Faker-driven bulk demo data, orchestrated by DemoDataSeeder.
