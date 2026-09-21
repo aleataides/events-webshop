@@ -87,6 +87,12 @@ reservation row, create `Order` + `OrderItem` rows. No payment gateway — mock
 checkout, Buy response IS the confirmation data (no separate
 `GET /orders/{id}` endpoint).
 
+Same conditional-UPDATE pattern as [stock locking](#stock-locking)
+(`AreaRepository::trySell`), not a plain entity mutation — guards against a
+duplicate concurrent Buy (double-click) re-converting the same reservation
+twice. A reservation whose UPDATE affects 0 rows means another Buy already
+claimed it; the whole transaction aborts with `InsufficientStockException`.
+
 ## VAT/tax
 
 `Price.value` already bundles `basePrice + ticketFee + outletFee`, no separate

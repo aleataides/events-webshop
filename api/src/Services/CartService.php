@@ -122,8 +122,7 @@ final class CartService
 
     /**
      * Atomically converts every reservation into a sale — see
-     * docs/shared/business-rules.md#buy--checkout. No payment gateway; this
-     * response IS the confirmation, there's no separate GET /orders/{id}.
+     * docs/shared/business-rules.md#buy--checkout.
      */
     public function buy(Affiliate $affiliate, ?string $cartIdRaw): Order
     {
@@ -133,15 +132,19 @@ final class CartService
         }
 
         $order = new Order(Uuid::uuid7(), $affiliate);
-        foreach ($cart->getReservations() as $reservation) {
-            $reservation->getPrice()->getArea()->sell($reservation->getQty());
-            new OrderItem(Uuid::uuid7(), $order, $reservation->getPrice(), $reservation->getQty());
-            $this->entityManager->remove($reservation);
-        }
+        $this->transactional(function () use ($cart, $order): void {
+            foreach ($cart->getReservations() as $reservation) {
+                if (!$this->areaRepository->trySell($reservation->getPrice()->getArea()->getId(), $reservation->getQty())) {
+                    throw new InsufficientStockException($reservation->getPrice()->getId()->toString());
+                }
 
-        $this->entityManager->persist($order);
-        $this->entityManager->remove($cart);
-        $this->entityManager->flush();
+                new OrderItem(Uuid::uuid7(), $order, $reservation->getPrice(), $reservation->getQty());
+                $this->entityManager->remove($reservation);
+            }
+
+            $this->entityManager->persist($order);
+            $this->entityManager->remove($cart);
+        });
 
         return $order;
     }
