@@ -12,32 +12,38 @@
   - `eslint-plugin-perfectionist` (import sorting only — its
     `sort-vue-attributes` rule left disabled, redundant with
     `vue/attributes-order`)
-  - Prettier run standalone (not via `eslint-plugin-prettier`)
+  - Prettier run standalone (not via `eslint-plugin-prettier`) +
+    `eslint-config-prettier` (disables every stylistic ESLint rule that could
+    fight Prettier's own formatting choices)
   - All auto-fixable, wired into the pre-commit hook + CI lint job.
 - **Map**: Leaflet + OpenStreetMap, lazy-loaded only when the map section is
   expanded.
+- **DOMPurify**: sanitizes the event description HTML before `v-html`
+  (BE-sourced, but sanitized as defense-in-depth rather than trusted blindly).
 - **Node 24 LTS**, npm.
 
 ## Folder structure (layer-first)
 
-```
-web/src/views/{EventList,EventDetail,Cart}/{Page}.vue + components/*.vue
-web/src/components/  (shared/reusable, e.g. AppHeader.vue, TicketCounter.vue)
-web/src/stores/{cart,affiliate}.ts
-web/src/composables/useX.ts
-web/src/router/index.ts
-web/src/api/{client.ts,events.ts,cart.ts}.ts
-web/src/types/{event.ts,cart.ts}.ts
-web/tests/  (mirrors src/ structure)
-```
-
-- `components/` = shared/reusable across views. `views/{Page}/components/` =
-  page-specific, not reused elsewhere.
+- `views/` — one folder per page (`EventList`, `EventDetail`, `Cart`), each
+  with its own `components/` for page-specific, non-reused pieces.
+- `components/` — shared/reusable components across views.
+- `stores/` — Pinia stores.
+- `composables/` — `useX` composables.
+- `router/` — Vue Router setup.
+- `api/` — Axios client + per-resource API modules.
+- `lib/` — small framework-agnostic helpers.
+- `plugins/` — third-party plugin setup (Vuetify).
+- `styles/` — global CSS/design tokens.
+- `types/` — shared TypeScript types.
+- `tests/` — mirrors `src/`.
 
 ## Testing scope
 
 Unit tests (composables/stores) + component tests (Vitest + Vue Test Utils)
 for key components (cart, ticket selector, filter). No E2E.
+
+Every behavior change ships with a test covering it — but only that logic,
+not incidental/pre-existing coverage the change happened to touch.
 
 All commands run via `docker compose exec web ...` — see
 [../../docs/shared/infra.md](../../docs/shared/infra.md).

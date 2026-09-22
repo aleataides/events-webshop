@@ -8,6 +8,8 @@ updated when a decision changes.
   folder structure, testing scope.
 - [docs/conventions.md](docs/conventions.md) — naming, state, cart identity,
   routing, search/filter, cart expiry UX.
+- [docs/design-system.md](docs/design-system.md) — Monochrome Precision theme,
+  typography, component patterns, layout.
 
 Also relevant (shared with `api/`):
 

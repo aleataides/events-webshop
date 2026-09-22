@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Tools\Console\ConsoleRunner;
+use Symfony\Component\Console\Application;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+if (is_readable(__DIR__ . '/../.env')) {
+    Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
+}
+
+$container = require __DIR__ . '/../bootstrap/container.php';
+
+$application = new Application('event-webshop', 'api');
+
+/** @var DependencyFactory $migrationsDependencyFactory */
+$migrationsDependencyFactory = require __DIR__ . '/../bootstrap/migrations.php';
+ConsoleRunner::addCommands($application, $migrationsDependencyFactory);
+
+foreach ($container->get('app.commands') as $commandClass) {
+    $application->addCommand($container->get($commandClass));
+}
+
+$application->run();

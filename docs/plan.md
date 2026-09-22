@@ -35,7 +35,7 @@ api/src/Resource/EventResource.php
 api/src/Middleware/{AffiliateMiddleware,RequestIdMiddleware,CorsMiddleware}.php
 api/src/Exception/{CartExpiredException,InsufficientStockException,...}.php
 api/src/Shared/{Logger,ErrorHandler}.php
-api/bin/console.php  (console commands: seed, fixture:event, migrations)
+api/bin/console  (console commands: seed, fixture:event, migrations)
 api/tests/{Unit,Integration}/... (mirrors src/ structure)
 ```
 
@@ -129,31 +129,40 @@ Event detail (the part that matters — ticket structure):
   client-generation because trusting a client-picked id means the server
   would blindly create-on-demand for whatever's in the header — no guarantee
   the id was ever actually allocated, versus a real issued credential.
-- **Stock locking**: atomic conditional update, no long-held row locks:
+- **Stock locking**: `Area.capacity` is the fixed original total. Available =
+  `capacity - reserved_qty - sold_qty`. Adding a reservation is an atomic
+  conditional update, no long-held row locks — check must include `sold_qty`,
+  not just `reserved_qty`, or already-sold capacity would still look free:
 
   ```sql
   UPDATE area SET reserved_qty = reserved_qty + :qty
-  WHERE id = :area_id AND reserved_qty + :qty <= capacity
+  WHERE id = :area_id AND reserved_qty + sold_qty + :qty <= capacity
   ```
 
   This is the standard high-load-ecommerce/ticketing pattern — resolves the race
   in one round trip, no `SELECT ... FOR UPDATE` wait queue under contention.
+  **Releasing** a reservation (expiry, edit-down, removal) must decrement
+  `reserved_qty` by that qty in the same transaction that deletes/shrinks the
+  row, or that stock stays incorrectly marked unavailable forever.
 - `ticket_reservation` rows reference `Price` (for label/price shown) and
   implicitly `Area` (for capacity accounting), with a **cart-level** `expires_at`
   (one clock for the whole cart, reset on every add/edit — not per-reservation-row).
 - **Expiry enforcement**: BE checks `now > cart.expires_at` on every cart
   read/mutation — authoritative over the FE's countdown timer (which is UX-only,
   and guards against client clock drift / stale tabs). On expiry: release
-  reservations (delete rows, freeing Area capacity), respond `410 Gone` +
-  `{"error": "cart_expired"}`. FE shows a modal on receiving this (or when its own
-  countdown hits zero, whichever first) and clears local cart state.
+  reservations (delete rows, decrementing `reserved_qty`, freeing Area
+  capacity), respond `410 Gone` + `{"error": "cart_expired"}`. FE shows a modal
+  on receiving this (or when its own countdown hits zero, whichever first) and
+  clears local cart state.
   A periodic cleanup command for long-abandoned expired carts is a nice-to-have
   (garbage collection only — not correctness-critical, since expired reservations
   are already excluded from availability queries by the `expires_at` filter).
-- **Buy**: one atomic transaction converts reservation → sold:
-  increment `Area.sold_qty` permanently, delete the reservation row, create
-  `Order` + `OrderItem` rows. **No payment gateway** — task.md never asked for
-  one, explicitly out of scope (mock checkout: Buy → order created → confirmation).
+- **Buy**: one atomic transaction converts each reservation → sold:
+  **decrement `Area.reserved_qty`** (hold finalized) **and increment
+  `Area.sold_qty`** by the same qty — both, or the accounting double-counts
+  that qty as unavailable — delete the reservation row, create `Order` +
+  `OrderItem` rows. **No payment gateway** — task.md never asked for one,
+  explicitly out of scope (mock checkout: Buy → order created → confirmation).
 - **VAT/tax**: `price.value` (from the real source data) already bundles
   `basePrice + ticketFee + outletFee` with no separate VAT field anywhere, and
   the reference shop itself only ever shows a **static disclaimer** ("incl.
@@ -186,8 +195,9 @@ Event detail (the part that matters — ticket structure):
 - **PHP-DI** — autowiring, Slim's recommended companion container
   (task.md: "prefer DI over static").
 - **PHP 8.4** (property hooks, asymmetric visibility — mature since Nov 2024).
-- **PHPStan level max**, **PHP-CS-Fixer** (PSR-12, auto-fix on `--fix`),
-  **PHPUnit**.
+- **PHPStan level 6** (catches real argument-type mismatches and missing
+  type hints without fighting third-party type-stub imprecision),
+  **PHP-CS-Fixer** (PSR-12, auto-fix on `--fix`), **PHPUnit**.
 - **Redis**: event cache (cache-aside, simple TTL — no invalidation logic needed,
   since events have no admin/write path to go stale against) + rate-limit
   counters (per-IP sliding window, global on all `/api` routes, `429` +
@@ -292,7 +302,7 @@ Event detail (the part that matters — ticket structure):
   staged files by path prefix (`web/` vs `api/`) and runs the relevant
   lint/typecheck/phpstan/test commands, blocking the commit on failure.
 - **All local dev commands run through Docker**, both apps — never bare
-  `npm run ...` / `php bin/console ...` / `composer ...` on the host. Always
+  `npm run ...` / `bin/console ...` / `composer ...` on the host. Always
   `docker compose exec web npm run <script>` / `docker compose exec api
   bin/console ...` / `docker compose exec api composer ...`. Applies uniformly
   to: the pre-commit hook, manual commands during development, the fixture skill
@@ -305,16 +315,18 @@ Event detail (the part that matters — ticket structure):
   - `web` job: eslint, prettier check, vue-tsc typecheck, vitest, npm audit.
   - `api` job: php-cs-fixer `--dry-run`, phpstan, phpunit, composer audit.
   - Both required status checks to merge (branch protection).
-- **Seeding**: a manual command (`composer seed` or console command) always
-  runnable; the `api` container's entrypoint also auto-seeds on first start
-  **only if the events table is empty** — idempotent, not a wipe-and-reseed on
-  every restart. Gives `docker-compose up` a working demo out of the box.
+- **Migrations & seeding**: migrations run automatically on `api` container
+  start (`docker/api/entrypoint.sh`). Seeding stays manual
+  (`bin/console app:seed`) — not idempotent (each run adds more demo rows),
+  so auto-running it on every restart would pile up duplicates.
 - **`.editorconfig`**: root-level, single file (not per-app) — 4-space indent for
   `.php`, 2-space for `.ts`/`.vue`/`.json`/`.yaml`, UTF-8, LF line endings, trim
   trailing whitespace, final newline. Mirrors PSR-12 (php) and Vue ecosystem
   convention (2-space) side by side. (task.md requirement, added mid-planning.)
 - **Git workflow**: Conventional Commits (`feat:`/`fix:`/`chore:`/etc, via the
-  `/commit-changes` skill), branch naming `type/short-description`.
+  `/commit-changes` skill), branch naming `type/short-description`. One branch
+  per phase/case, cut from `staging`, PR'd into `staging`; `staging` → `main`
+  when ready for a release point. `main` stays always-deployable.
 - **Env vars**: one root `.env` (gitignored, `.env.example` committed),
   `docker-compose.yml` passes only the relevant subset into each service's
   `environment` block. Revisited mid-scaffolding: originally split per-app to
@@ -370,7 +382,7 @@ that expires a cart in 10 seconds for testing the expiry modal"):
   --areas='[{"name":"Freie Platzwahl","capacity":20,"prices":[{"name":"Normalpreis","value":23.76}]}]'
   --affiliate=<id>`. Similar commands for category/venue/affiliate if standalone
   creation is ever needed. **All `app:*` commands always run through
-  `docker compose exec api ...`** — never bare `php bin/console ...` on the host
+  `docker compose exec api ...`** — never bare `bin/console ...` on the host
   — so the command runs against the actual container's PHP/extension/DB
   environment, not a possibly-mismatched host setup. This applies uniformly:
   seeder, migrations, fixture commands, and the skill below.

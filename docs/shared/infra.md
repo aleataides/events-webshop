@@ -9,7 +9,7 @@ one single container, which this had been a deliberate deviation from — no
 longer a deviation now).
 
 **All local dev commands run through Docker**, both apps — never bare
-`npm run ...` / `php bin/console ...` / `composer ...` on the host:
+`npm run ...` / `bin/console ...` / `composer ...` on the host:
 
 ```sh
 docker compose exec web npm run <script>
@@ -49,12 +49,21 @@ merge:
 - `web` job: eslint, prettier check, vue-tsc typecheck, vitest, npm audit.
 - `api` job: php-cs-fixer `--dry-run`, phpstan, phpunit, composer audit.
 
-## Seeding
+## Migrations & seeding
 
-Manual command always runnable (`docker compose exec api bin/console
-app:seed`); the `api` container's entrypoint also auto-seeds on first start
-**only if the events table is empty** — idempotent, not a wipe-and-reseed on
-every restart. Gives `docker compose up` a working demo out of the box.
+Migrations run automatically on `api` container start
+(`docker/api/entrypoint.sh`). Seeding is manual (`docker compose exec api
+bin/console app:seed`) — deliberately not auto-run on container start, since
+it's not idempotent (each run adds more demo rows rather than replacing
+existing ones), so auto-running it on every restart would keep piling up
+duplicate data.
+
+`app:seed` always seeds one pinned affiliate ("ATELIER THEATER GmbH") with a
+fixed real-world event catalog (`api/src/Seeders/Data/AtelierTheaterEvents.php`,
+extracted from a real EVENTIM.Light payload — see
+[domain-model.md](domain-model.md#real-source-data-reference-only-not-committed-as-fixtures)),
+find-or-created so repeat runs don't duplicate it, plus `--affiliates` (default
+1) additional Faker affiliates/events via the regular seeders.
 
 ## Dev-fixture tooling (the one project-specific skill)
 
@@ -76,7 +85,10 @@ final newline.
 ## Git workflow
 
 Conventional Commits (`feat:`/`fix:`/`chore:`/etc), branch naming
-`type/short-description`.
+`type/short-description`. One branch per phase/case (see
+[plan.md](../plan.md#implementation-phases)), e.g. `feat/be-data-layer`.
+Branches are cut from `staging`, PR'd into `staging`; `staging` → `main` when
+ready for a release point. `main` stays always-deployable.
 
 ## Env vars
 

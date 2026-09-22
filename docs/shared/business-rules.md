@@ -16,20 +16,40 @@ no guarantee it was ever actually allocated.
 
 ## Stock locking
 
-Atomic conditional update, no long-held row locks:
+`Area.capacity` is the fixed original total. Available stock is always
+`capacity - reserved_qty - sold_qty`. Adding a reservation is an atomic
+conditional update, no long-held row locks — the check **must** include
+`sold_qty`, not just `reserved_qty`, or capacity already sold would still
+look free:
 
 ```sql
 UPDATE area SET reserved_qty = reserved_qty + :qty
-WHERE id = :area_id AND reserved_qty + :qty <= capacity
+WHERE id = :area_id AND reserved_qty + sold_qty + :qty <= capacity
 ```
 
 Standard high-load-ecommerce/ticketing pattern — resolves the race in one round
 trip, no `SELECT ... FOR UPDATE` wait queue under contention.
 
+**Releasing** a reservation (expiry, cart edit-down, explicit removal) must
+decrement `reserved_qty` by that reservation's qty in the same transaction
+that deletes/shrinks the reservation row — otherwise that stock stays
+permanently (and incorrectly) marked unavailable.
+
+The UPDATE runs inside the same DB transaction as the reservation-row write
+(`CartService::transactional`), so a flush failure can't leave `reserved_qty`
+incremented with no reservation to match it. That holds the row lock for the
+duration of the flush, not just the UPDATE — acceptable at this scale, revisit
+if cart writes get slow enough for that to matter.
+
 ## Cart expiry
 
-- One clock for the **whole cart**, reset on every add/edit — not per
-  reservation row.
+- 15 minutes (`CART_EXPIRY_MINUTES` env var, default 15) — lower it locally to
+  test expiry without waiting; per-event override was rejected as unneeded
+  (see the seed-fixture skill).
+- One clock for the **whole cart**, not per reservation row. Renewed on any
+  net increase in reservations: `POST /cart/items` (new price line, cart
+  empty or not) and `PATCH /cart/items/{id}` when it raises qty. A `PATCH`
+  that lowers qty, or `DELETE`, never renews it — only adding more does.
 - BE checks `now > cart.expires_at` on every cart read/mutation — authoritative
   over the FE's countdown timer (which is UX-only, and covers client clock
   drift / stale tabs).
@@ -59,10 +79,19 @@ which keep their real venue timezone (e.g. `Europe/Berlin`) for display.
 
 ## Buy / checkout
 
-One atomic transaction converts reservation → sold: increment `Area.sold_qty`
-permanently, delete the reservation row, create `Order` + `OrderItem` rows.
-No payment gateway — mock checkout, Buy response IS the confirmation data (no
-separate `GET /orders/{id}` endpoint).
+One atomic transaction converts reservation → sold, for each reservation in
+the cart: **decrement `Area.reserved_qty`** (the hold is finalized, no longer
+just "held") **and increment `Area.sold_qty`** by the same qty (both, or the
+stock accounting double-counts that qty as unavailable), delete the
+reservation row, create `Order` + `OrderItem` rows. No payment gateway — mock
+checkout, Buy response IS the confirmation data (no separate
+`GET /orders/{id}` endpoint).
+
+Same conditional-UPDATE pattern as [stock locking](#stock-locking)
+(`AreaRepository::trySell`), not a plain entity mutation — guards against a
+duplicate concurrent Buy (double-click) re-converting the same reservation
+twice. A reservation whose UPDATE affects 0 rows means another Buy already
+claimed it; the whole transaction aborts with `InsufficientStockException`.
 
 ## VAT/tax
 

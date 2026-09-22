@@ -7,9 +7,11 @@ api/vendor/
 
 # Build output
 web/dist/
+web/*.tsbuildinfo
 
 # PHP
 api/.phpunit.cache/
+api/.php-cs-fixer.cache
 api/var/cache/
 api/var/log/
 
